@@ -6,6 +6,24 @@ Evaluates LLM ensemble performance at the media outlet level by:
 2. Comparing against AllSides ground truth (3-class system)
 3. Calculating metrics and generating visualizations
 
+Scoring note
+------------
+The ensemble models output a raw bias score on a -3 to +3 integer scale
+(same prompts and parsing as the standard batch evaluation). This module
+uses those raw scores in two ways:
+
+* Violin / beeswarm plots  — raw -3..+3 scores are plotted directly,
+  showing the full per-article distribution for each outlet.
+* Accuracy / F1 metrics    — scores are collapsed to 3 classes before
+  comparison with AllSides ground truth:
+      score <= -1  →  Left
+      -1 < score < 1  →  Center
+      score >= 1  →  Right
+
+No separate prompt or output-parser is needed for outlet evaluation;
+the only difference from batch evaluation is that results are aggregated
+and visualised at the outlet level rather than the article level.
+
 Author: Media Bias Detection Team
 Date: 2025
 """

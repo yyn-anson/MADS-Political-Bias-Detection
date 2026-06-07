@@ -79,32 +79,76 @@ python run_outlet_evaluation.py small
 
 ### 4. View Results
 
-Results are saved in `outputs/ensemble_outputs/` or `outputs/ensemble_outputs_small/`:
+Results are saved in `ensemble_outputs/` or `ensemble_outputs_small/` (relative to the project root):
 ```
-outputs/ensemble_outputs/session_TIMESTAMP/
-├── aggregated_results.json       # Overall metrics
-├── batch_0_3_results.json        # Individual batch results
-├── individual_models/             # Per-model performance
-└── collaborative_discussions/     # Discussion transcripts
+ensemble_outputs_small/session_TIMESTAMP/
+├── aggregated_results.json        # Overall metrics
+├── batch_0_8_results.json         # Individual batch results
+├── individual_models/              # Per-model performance
+└── collaborative_discussions/      # Discussion transcripts
 ```
+
+---
+
+## Environment Setup
+
+### Client machine
+
+```bash
+pip install -r requirements.txt
+```
+
+Key packages installed: `openai` (vLLM HTTP client), `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `seaborn`, `tqdm`, `openpyxl`.
+
+### GPU server (vLLM)
+
+```bash
+pip install vllm
+# Optional: HuggingFace CLI for downloading gated models
+pip install huggingface_hub
+huggingface-cli login   # paste your HF_TOKEN when prompted
+```
+
+See [docs/MODELS.md](docs/MODELS.md) for per-model `vllm serve` commands.
 
 ---
 
 ## Model Configurations
 
 ### Regular Ensemble (Higher Accuracy)
-- **Qwen3-14B** (instruction-tuned, thinking mode)
-- **GPT-OSS-20B** (open-source GPT variant)
-- **Mistral-Small-22B** (instruction-tuned)
+| Model | Port | VRAM |
+|-------|------|------|
+| Qwen3-14B (thinking mode) | 8001 | ~28 GB |
+| GPT-OSS-20B | 8002 | ~40 GB |
+| Mistral-Small-22B | 8003 | ~44 GB |
 
-**Batch Size**: 3 articles | **Memory**: ~24GB VRAM
+**Batch Size**: 3 articles | **Total VRAM**: ~112 GB
 
 ### Small Ensemble (Faster, Efficient)
-- **Llama 3.2-3B** (instruction-tuned)
-- **Qwen3-4B** (instruction-tuned)
-- **Mistral-Small-22B** (shared with regular)
+| Model | Port | VRAM |
+|-------|------|------|
+| Llama-3.2-3B | 8001 | ~6 GB |
+| Qwen3-4B | 8002 | ~8 GB |
+| Mistral-7B | 8003 | ~14 GB |
 
-**Batch Size**: 8 articles | **Memory**: ~12GB VRAM
+**Batch Size**: 8 articles | **Total VRAM**: ~28 GB
+
+### Scoring scale
+
+All models rate each article on a **-3 to +3 integer scale**:
+
+| Score | Meaning |
+|-------|---------|
+| -3 | Strong left |
+| -2 | Moderate left |
+| -1 | Slight left |
+| 0 | Neutral / balanced |
+| +1 | Slight right |
+| +2 | Moderate right |
+| +3 | Strong right |
+
+For **accuracy / F1 metrics** the score is collapsed to 3 classes: score ≤ -1 → Left, -1 < score < 1 → Center, score ≥ 1 → Right.
+For **outlet-level violin plots** the raw -3..+3 scores are used directly, showing the full distribution of individual article predictions per outlet.
 
 ---
 

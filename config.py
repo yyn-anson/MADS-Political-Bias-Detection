@@ -99,6 +99,11 @@ def get_config() -> Dict[str, Any]:
             },
         },
 
+        # ── File paths ────────────────────────────────────────────────────
+        'files': {
+            'allsides_ratings': os.path.join(dirs['data'], 'allsides', 'AllSides_Rating.csv'),
+        },
+
         # ── Ensemble runtime settings ──────────────────────────────────────
         'ensemble': {
             'max_discussion_rounds':  8,
