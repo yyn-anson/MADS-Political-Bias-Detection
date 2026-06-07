@@ -12,51 +12,62 @@ This system employs multiple large language models (LLMs) in a collaborative fra
 
 ## System Requirements
 
-### Hardware
-- **GPU**: NVIDIA GPU with 24GB+ VRAM (for regular models) or 12GB+ (for small models)
-- **RAM**: 32GB+ recommended
-- **Storage**: 100GB+ for models and datasets
+| Component | Where it runs | Requirement |
+|-----------|--------------|-------------|
+| vLLM servers | **GPU machine** | Python 3.10+, CUDA 11.8+, NVIDIA GPU |
+| Python client | **Your machine** | Python 3.10+, no GPU needed |
 
-### Software
-- **Python**: 3.8 or higher
-- **CUDA**: 11.7+ (for GPU acceleration)
-- **Operating System**: Linux (recommended), Windows, macOS
+**VRAM**: ~28 GB for the small ensemble, ~112 GB for the regular ensemble.
+The GPU machine and your machine can be the same computer or separate hosts.
 
 ---
 
 ## Quick Start
 
-### 1. Installation
+### 1. Start vLLM servers (on the GPU machine)
+
+Install vLLM once on the GPU machine:
+```bash
+pip install vllm
+```
+
+Open **three terminals** and start one model per terminal (small ensemble shown):
 
 ```bash
-# Clone the repository
-git clone https://github.com/your-username/multi_agent_bias_detection.git
-cd multi_agent_bias_detection
+# Terminal 1
+vllm serve meta-llama/Llama-3.2-3B-Instruct --port 8001 --api-key token-abc123 --max-model-len 16384
 
-# Install dependencies
+# Terminal 2
+vllm serve Qwen/Qwen3-4B --port 8002 --api-key token-abc123 --max-model-len 16384
+
+# Terminal 3
+vllm serve mistralai/Mistral-7B-Instruct-v0.3 --port 8003 --api-key token-abc123 --max-model-len 16384
+```
+
+Wait until each terminal prints `INFO: Application startup complete.`
+
+See **[docs/MODELS.md](docs/MODELS.md)** for regular ensemble commands and multi-GPU flags.
+
+### 2. Install client dependencies
+
+```bash
+git clone https://github.com/yyn-anson/MADS-Political-Bias-Detection.git
+cd MADS-Political-Bias-Detection
 pip install -r requirements.txt
-
-# Set HuggingFace token (optional, for gated models)
-export HF_TOKEN="your_huggingface_token"
 ```
 
-### 2. Prepare Data
-
-Option A: Use pre-balanced datasets (recommended)
+If the GPU machine is on a different host, point the client at it:
 ```bash
-# Download balanced datasets from [link]
-# Extract to data/balanced_datasets/
-```
-
-Option B: Create balanced dataset from raw data
-```bash
-python tools/create_balanced_dataset.py --dataset baly --n-samples 100
+export VLLM_LLAMA_URL="http://gpu-server:8001/v1"
+export VLLM_QWEN_URL="http://gpu-server:8002/v1"
+export VLLM_MISTRAL_URL="http://gpu-server:8003/v1"
+export VLLM_API_KEY="token-abc123"
 ```
 
 ### 3. Run Evaluation
 
 ```bash
-# Small models (faster, less memory)
+# Small models (faster, less VRAM)
 python run_batches.py --model small --dataset baly --total 100
 
 # Regular models (higher accuracy)
@@ -183,23 +194,26 @@ python tools/create_balanced_dataset.py --dataset custom --samples-per-outlet 10
 
 ## Using Your Own Model
 
-You can swap in any HuggingFace causal-language model without touching the ensemble logic.
+Any model served by vLLM (or any OpenAI-compatible API) can be plugged in without changing the ensemble logic.
 
-1. Copy the template:
+1. Start your model's vLLM server:
+   ```bash
+   vllm serve your-org/your-model --port 8004 --api-key token-abc123
+   ```
+
+2. Copy the labeler template:
    ```bash
    cp src/models/custom_labeler_template.py src/models/my_model_labeler.py
    ```
 
-2. Fill in three TODO sections: your model ID, prompt format, and output parsing.
+3. Fill in the `TODO` sections: constructor params, any `extra_body` flags, and thinking-token stripping if needed.
 
-3. Pass an instance to the ensemble's labeler list in `src/ensemble/ensemble_small.py` or `ensemble_regular.py`.
-
-4. Run:
+4. Wire it into the ensemble `__init__` and run:
    ```bash
    python run_batches.py --model small --dataset baly --total 10
    ```
 
-See **[docs/ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md)** for a complete step-by-step walkthrough, including quantization options, discussion support, and troubleshooting.
+See **[docs/ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md)** for a full walkthrough.
 
 ---
 
@@ -245,38 +259,26 @@ Performance on standard benchmarks:
 | Ad Fontes | 65.8% | 69.2% | 72.4% | +6.6% |
 
 *Results may vary based on model versions and hardware*
+*Results above is only for demonstration purposes*
 
 ---
 
 ## Troubleshooting
 
-### Common Issues
+**`RuntimeError: vLLM server at http://localhost:8001/v1 is not reachable`**
+The vLLM server on that port is not running or not yet ready. Confirm `Application startup complete` appeared in that terminal and that port/URL env vars match.
 
-**Out of Memory**
-```bash
-# Use smaller batch size
-python run_batches.py --model small --dataset baly --batch-size 2
+**Server on a remote host not reachable**
+Set `VLLM_LLAMA_URL` / `VLLM_QWEN_URL` / `VLLM_MISTRAL_URL` to point at the remote IP. Make sure ports 8001-8003 are open in the firewall.
 
-# Or use small models instead of regular
-python run_batches.py --model small --dataset baly
-```
-
-**Model Download Issues**
-```bash
-# Set HuggingFace token
-export HF_TOKEN="your_token"
-
-# Or manually download models to models/ directory
-```
+**Out of VRAM on the GPU server**
+Add `--max-model-len 8192` to the `vllm serve` command to shrink KV-cache memory, or add `--tensor-parallel-size 2` to shard across two GPUs.
 
 **Dataset Not Found**
 ```bash
-# Verify dataset path
 ls data/balanced_datasets/balanced_baly/
-
-# Check dataset_manifest.json exists
-cat data/balanced_datasets/balanced_baly/dataset_manifest.json
 ```
+The balanced datasets are included in this repo. If the directory is empty, re-clone or check the gitignore.
 
 For more troubleshooting, see [docs/REPRODUCTION.md](docs/REPRODUCTION.md#troubleshooting)
 

@@ -1,192 +1,173 @@
 # Quick Start Guide
 
-Get the Multi-Agent Bias Detection system running in 5 minutes!
+Get the Multi-Agent Bias Detection system running in under 10 minutes.
 
 ---
 
-## Step 1: Install Dependencies (2 minutes)
+## Prerequisites
+
+| Component | Where it runs | Requirement |
+|-----------|--------------|-------------|
+| vLLM servers | **GPU machine** | Python 3.10+, CUDA 11.8+, NVIDIA GPU (see VRAM table below) |
+| Python client | **Your machine** | Python 3.10+ |
+
+> The GPU machine and your machine can be the same computer, or separate machines on the same network.
+
+### VRAM requirements
+
+| Ensemble | Models | VRAM needed |
+|----------|--------|-------------|
+| Small | Llama-3.2-3B + Qwen3-4B + Mistral-7B | ~28 GB total |
+| Regular | Qwen3-14B + GPT-OSS-20B + Mistral-Small-22B | ~112 GB total |
+
+---
+
+## Step 1: Start vLLM servers (on the GPU machine)
+
+Install vLLM once on the GPU machine:
 
 ```bash
-# Navigate to project directory
-cd multi_agent_bias_detection
+pip install vllm
+```
 
-# Install Python packages
+Then open **three separate terminals** and run one command each.
+
+### Small ensemble
+
+```bash
+# Terminal 1
+vllm serve meta-llama/Llama-3.2-3B-Instruct \
+    --port 8001 --api-key token-abc123 --max-model-len 16384
+
+# Terminal 2
+vllm serve Qwen/Qwen3-4B \
+    --port 8002 --api-key token-abc123 --max-model-len 16384
+
+# Terminal 3
+vllm serve mistralai/Mistral-7B-Instruct-v0.3 \
+    --port 8003 --api-key token-abc123 --max-model-len 16384
+```
+
+### Regular ensemble
+
+```bash
+# Terminal 1
+vllm serve Qwen/Qwen3-14B \
+    --port 8001 --api-key token-abc123 --max-model-len 32768
+
+# Terminal 2
+vllm serve openai/gpt-oss-20b \
+    --port 8002 --api-key token-abc123 --max-model-len 8192
+
+# Terminal 3
+vllm serve mistralai/Mistral-Small-Instruct-2409 \
+    --port 8003 --api-key token-abc123 --max-model-len 8192
+```
+
+Wait until each terminal prints:
+```
+INFO:     Application startup complete.
+```
+
+**If the GPU machine is not localhost**, set these env vars on your client machine before step 3:
+
+```bash
+# Linux / macOS
+export VLLM_LLAMA_URL="http://gpu-server-ip:8001/v1"
+export VLLM_QWEN_URL="http://gpu-server-ip:8002/v1"
+export VLLM_MISTRAL_URL="http://gpu-server-ip:8003/v1"
+export VLLM_API_KEY="token-abc123"
+
+# PowerShell
+$env:VLLM_LLAMA_URL   = "http://gpu-server-ip:8001/v1"
+$env:VLLM_QWEN_URL    = "http://gpu-server-ip:8002/v1"
+$env:VLLM_MISTRAL_URL = "http://gpu-server-ip:8003/v1"
+$env:VLLM_API_KEY     = "token-abc123"
+```
+
+---
+
+## Step 2: Install client dependencies
+
+On the machine you will run the Python scripts from:
+
+```bash
+git clone https://github.com/yyn-anson/MADS-Political-Bias-Detection.git
+cd MADS-Political-Bias-Detection
 pip install -r requirements.txt
-
-# (Optional) Set HuggingFace token for gated models
-export HF_TOKEN="your_huggingface_token"
-```
-
-**Requirements**: Python 3.8+, CUDA 11.7+, 12GB+ GPU RAM
-
----
-
-## Step 2: Prepare Data (3 minutes)
-
-### Option A: Download Pre-Balanced Dataset (Recommended)
-
-```bash
-# Download from [link to be added]
-# Extract to data/balanced_datasets/
-
-# Verify structure
-ls data/balanced_datasets/balanced_baly/
-# Should see: article files + dataset_manifest.json
-```
-
-### Option B: Create from Raw Data
-
-```bash
-# Create balanced Baly dataset (100 articles)
-python tools/create_balanced_dataset.py --dataset baly --n-samples 100
-
-# Verify creation
-ls data/balanced_datasets/balanced_baly/
 ```
 
 ---
 
-## Step 3: Run Your First Evaluation (1 minute)
+## Step 3: Verify servers are reachable
 
 ```bash
-# Small models (12GB GPU, faster)
+curl http://localhost:8001/v1/models -H "Authorization: Bearer token-abc123"
+# Expected: {"object":"list","data":[{"id":"meta-llama/Llama-3.2-3B-Instruct",...}]}
+```
+
+---
+
+## Step 4: Run your first evaluation
+
+```bash
+# Small ensemble (servers on ports 8001-8003)
 python run_batches.py --model small --dataset baly --total 10
 
-# Regular models (24GB GPU, more accurate)
+# Regular ensemble
 python run_batches.py --model regular --dataset baly --total 10
 ```
 
-**Expected output**:
+Expected console output:
 ```
 Running small ensemble model on baly dataset
 Total articles to process: 10
-Articles per run: 8
 
 Batch 1: Processing articles 0-8
 [OK] Batch 0-8 completed successfully
 
 AGGREGATING BATCH RESULTS
 Accuracy: 0.7500 (75.00%)
-Macro F1: 0.7234
+Macro F1:  0.7234
 ```
+
+Results are written to `outputs/ensemble_outputs_small/session_TIMESTAMP/`.
 
 ---
 
-## Step 4: View Results (30 seconds)
+## Common commands
 
 ```bash
-# Results are in outputs/ensemble_outputs_small/session_TIMESTAMP/
-
-# View aggregated metrics
-cat outputs/ensemble_outputs_small/session_*/aggregated_results.json
-
-# View individual model performance
-cat outputs/ensemble_outputs_small/session_*/individual_models/qwen3_results.json
-```
-
----
-
-## 🎉 Success!
-
-You've successfully:
-- ✅ Installed the system
-- ✅ Prepared a balanced dataset
-- ✅ Run multi-agent bias detection
-- ✅ Generated evaluation metrics
-
----
-
-## Next Steps
-
-### Run Outlet-Level Evaluation
-
-```bash
-# Complete workflow: ensemble + visualization
-python run_outlet_evaluation.py small
-
-# View plots in outputs/ensemble_outputs_small/session_*/outlet_evaluation_*/visualizations/
-```
-
-### Process Larger Dataset
-
-```bash
-# Process 1000 articles in batches
+# Process 1000 articles
 python run_batches.py --model small --dataset baly --total 1000
 
-# Monitor progress in real-time
-```
+# Resume an interrupted batch
+python run_batches.py --resume outputs/ensemble_outputs_small/session_20260101_120000
 
-### Try Different Datasets
+# Outlet-level evaluation
+python run_outlet_evaluation.py small
 
-```bash
-# Budak dataset
-python run_batches.py --model small --dataset budak
-
-# Ad Fontes dataset
-python run_batches.py --model small --dataset ad_fontes
-
-# Custom outlet dataset
-python run_batches.py --model small --dataset custom
-```
-
----
-
-## Common Commands Cheat Sheet
-
-```bash
-# Basic ensemble run
-python run_batches.py --model small --dataset baly
-
-# Resume interrupted batch
-python run_batches.py --resume outputs/ensemble_outputs_small/session_20250120_143022
-
-# Custom batch size (reduce if out of memory)
-python run_batches.py --model small --dataset baly --batch-size 4
-
-# Outlet evaluation (custom dataset)
-python run_outlet_evaluation.py small --dataset-path data/balanced_datasets/custom_100_per_outlet
-
-# Create balanced dataset
-python tools/create_balanced_dataset.py --dataset baly --n-samples 1000
+# Different datasets
+python run_batches.py --model small --dataset budak --total 100
+python run_batches.py --model small --dataset ad_fontes --total 100
 ```
 
 ---
 
 ## Troubleshooting
 
-### Out of Memory?
-```bash
-# Reduce batch size
-python run_batches.py --model small --dataset baly --batch-size 2
-```
+**`RuntimeError: vLLM server at http://localhost:8001/v1 is not reachable`**
+The server on that port is not running or not yet ready. Check that `Application startup complete` appeared in that terminal, and that the port/URL env vars match.
 
-### Models not downloading?
-```bash
-# Check HuggingFace token
-echo $HF_TOKEN
+**Server starts but model is wrong**
+Each port must serve the exact model ID listed above. Check `vllm serve` was given the right `meta-llama/Llama-3.2-3B-Instruct` / `Qwen/Qwen3-4B` / `mistralai/Mistral-7B-Instruct-v0.3` argument.
 
-# Set token if missing
-export HF_TOKEN="hf_..."
-```
+**Out of VRAM**
+Add `--max-model-len 8192` to reduce KV-cache size, or use the small ensemble instead of regular.
 
-### Dataset not found?
-```bash
-# Verify path exists
-ls data/balanced_datasets/balanced_baly/dataset_manifest.json
-
-# Re-create if missing
-python tools/create_balanced_dataset.py --dataset baly --n-samples 100
-```
+**Multi-GPU setup**
+Add `--tensor-parallel-size 2` (or higher) to the `vllm serve` command to shard a single model across multiple GPUs.
 
 ---
 
-## Need More Help?
-
-- **Detailed Guide**: See [docs/REPRODUCTION.md](docs/REPRODUCTION.md)
-- **Architecture**: See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- **Dataset Info**: See [data/README.md](data/README.md)
-- **Full Documentation**: See [README.md](README.md)
-
----
-
-**Happy bias detecting! 🚀**
+For full documentation see [docs/MODELS.md](docs/MODELS.md) and [docs/REPRODUCTION.md](docs/REPRODUCTION.md).
