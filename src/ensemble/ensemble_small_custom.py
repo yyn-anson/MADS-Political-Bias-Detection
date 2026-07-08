@@ -170,7 +170,7 @@ class EnsembleMultiModelDetector:
         self.discussion_dir = self.output_dir / "collaborative_discussions"
         self.discussion_dir.mkdir(parents=True, exist_ok=True)
         
-        # Initialize labelers from vLLM config (cheap to construct — just an OpenAI client)
+        # Initialize labelers from vLLM config (cheap to construct - just an OpenAI client)
         vllm_cfg = config['vllm']
         api_key = vllm_cfg['api_key']
         small_cfg = vllm_cfg['small_ensemble']
@@ -266,7 +266,7 @@ class EnsembleMultiModelDetector:
         
         # Calculate and display pre-discussion metrics (skip for custom datasets)
         if self.dataset_type != 'custom':
-            logger.info("\n📊 Ensemble Performance (Averaging/Majority Voting Only):")
+            logger.info("\nEnsemble Performance (Averaging/Majority Voting Only):")
             pre_discussion_metrics = self._calculate_evaluation_metrics(initial_results, articles, display_header=False)
             
             # Store pre-discussion metrics
@@ -384,7 +384,7 @@ class EnsembleMultiModelDetector:
             logger.info("=" * 60)
             logger.info("POST-DISCUSSION EVALUATION")
             logger.info("=" * 60)
-            logger.info("\n📊 Ensemble Performance (After Collaborative Discussion):")
+            logger.info("\nEnsemble Performance (After Collaborative Discussion):")
             post_discussion_metrics = self._calculate_evaluation_metrics(final_results, articles, display_header=False)
             
             # Display metrics comparison
@@ -436,7 +436,7 @@ class EnsembleMultiModelDetector:
         return llama32_results, qwen3_results, mistral_results
     
     def _process_single_model(self, model_name: str, articles: List[tuple], labeler) -> List[Dict]:
-        """Process articles through a single model (vLLM — direct HTTP calls, no DataLoader)."""
+        """Process articles through a single model (vLLM - direct HTTP calls, no DataLoader)."""
         logger.info(f"Processing {len(articles)} articles with {model_name}")
 
         results = []
@@ -444,7 +444,7 @@ class EnsembleMultiModelDetector:
         for article_idx, (article_data, filename) in enumerate(articles):
             article_content = article_data.get('content', '')
             if not article_content or len(article_content.strip()) < 100:
-                logger.warning(f"{model_name}: Skipping article {article_idx} ({filename}) — content too short")
+                logger.warning(f"{model_name}: Skipping article {article_idx} ({filename}) - content too short")
                 self.stats['model_errors'][model_name] += 1
                 continue
 
@@ -1226,8 +1226,8 @@ class EnsembleMultiModelDetector:
         rep_direction_after = representative.current_direction
         minority_direction_after = minority.current_direction
         
-        logger.info(f"Stage 2 RESULT: {representative_id}:{rep_direction_before}→{rep_direction_after}, "
-                   f"{minority_id}:{minority_direction_before}→{minority_direction_after}")
+        logger.info(f"Stage 2 RESULT: {representative_id}:{rep_direction_before}->{rep_direction_after}, "
+                   f"{minority_id}:{minority_direction_before}->{minority_direction_after}")
         
         # Case 1: Minority changed to representative's INITIAL direction
         if minority_direction_after == rep_initial_direction and minority_direction_before != rep_initial_direction:
@@ -1562,11 +1562,11 @@ class EnsembleMultiModelDetector:
             acc_improvement = post_metrics['accuracy'] - pre_metrics['accuracy']
             f1_improvement = post_metrics['macro_f1'] - pre_metrics['macro_f1']
             
-            logger.info(f"                     Before Discussion → After Discussion")
-            logger.info(f"Accuracy:            {pre_metrics['accuracy']:.4f} → {post_metrics['accuracy']:.4f} "
-                       f"({'↑' if acc_improvement > 0 else '↓' if acc_improvement < 0 else '='} {abs(acc_improvement):.4f})")
-            logger.info(f"Macro F1:            {pre_metrics['macro_f1']:.4f} → {post_metrics['macro_f1']:.4f} "
-                       f"({'↑' if f1_improvement > 0 else '↓' if f1_improvement < 0 else '='} {abs(f1_improvement):.4f})")
+            logger.info(f"                     Before Discussion -> After Discussion")
+            logger.info(f"Accuracy:            {pre_metrics['accuracy']:.4f} -> {post_metrics['accuracy']:.4f} "
+                       f"({'+' if acc_improvement > 0 else '-' if acc_improvement < 0 else '='} {abs(acc_improvement):.4f})")
+            logger.info(f"Macro F1:            {pre_metrics['macro_f1']:.4f} -> {post_metrics['macro_f1']:.4f} "
+                       f"({'+' if f1_improvement > 0 else '-' if f1_improvement < 0 else '='} {abs(f1_improvement):.4f})")
             logger.info(f"Articles evaluated:  {pre_metrics['total_samples']}")
             
             # Show percentage improvements
@@ -1619,7 +1619,7 @@ class EnsembleMultiModelDetector:
             converged = article.get('convergence_achieved', False)
             conv_type = article.get('convergence_type', 'none')
             
-            logger.info(f"Article {article_id:3d}: {pre_dir:6s} ({pre_score:+.2f}) → {final_dir:6s} ({final_score:+.2f}) "
+            logger.info(f"Article {article_id:3d}: {pre_dir:6s} ({pre_score:+.2f}) -> {final_dir:6s} ({final_score:+.2f}) "
                        f"| Converged: {converged} ({conv_type})")
             
             if 'discussion_error' in article:
@@ -1919,8 +1919,8 @@ class EnsembleMultiModelDetector:
                 f1_change = post_metrics['macro_f1'] - pre_metrics['macro_f1']
             
                 logger.info("\nDiscussion Impact:")
-                logger.info(f"  Accuracy change: {acc_change:+.4f} ({pre_metrics['accuracy']:.4f} → {post_metrics['accuracy']:.4f})")
-                logger.info(f"  Macro F1 change: {f1_change:+.4f} ({pre_metrics['macro_f1']:.4f} → {post_metrics['macro_f1']:.4f})")
+                logger.info(f"  Accuracy change: {acc_change:+.4f} ({pre_metrics['accuracy']:.4f} -> {post_metrics['accuracy']:.4f})")
+                logger.info(f"  Macro F1 change: {f1_change:+.4f} ({pre_metrics['macro_f1']:.4f} -> {post_metrics['macro_f1']:.4f})")
             
                 # Analyze individual changes
                 improvement_count = sum(1 for d in discussion_details if not d['pre_correct'] and d['post_correct'])
@@ -1964,14 +1964,14 @@ class EnsembleMultiModelDetector:
         
             logger.info(f"\nEnsemble vs Best Individual:")
             logger.info(f"  Accuracy: {overall_metrics['accuracy']:.4f} vs {best_model_metrics['accuracy']:.4f} "
-                       f"({'↑' if acc_improvement > 0 else '↓' if acc_improvement < 0 else '='} {abs(acc_improvement):.4f})")
+                       f"({'+' if acc_improvement > 0 else '-' if acc_improvement < 0 else '='} {abs(acc_improvement):.4f})")
             logger.info(f"  Macro F1: {overall_metrics['macro_f1']:.4f} vs {best_model_metrics['macro_f1']:.4f} "
-                       f"({'↑' if f1_improvement > 0 else '↓' if f1_improvement < 0 else '='} {abs(f1_improvement):.4f})")
+                       f"({'+' if f1_improvement > 0 else '-' if f1_improvement < 0 else '='} {abs(f1_improvement):.4f})")
         
             if acc_improvement > 0:
-                logger.info(f"\n✓ Ensemble OUTPERFORMS best individual model by {acc_improvement:.4f} accuracy")
+                logger.info(f"\n[OK] Ensemble OUTPERFORMS best individual model by {acc_improvement:.4f} accuracy")
             elif acc_improvement < 0:
-                logger.info(f"\n⚠ Ensemble UNDERPERFORMS best individual model by {abs(acc_improvement):.4f} accuracy")
+                logger.info(f"\nWARNING: Ensemble UNDERPERFORMS best individual model by {abs(acc_improvement):.4f} accuracy")
             else:
                 logger.info(f"\n= Ensemble matches best individual model performance")
     
@@ -2022,7 +2022,7 @@ class EnsembleMultiModelDetector:
         with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(comprehensive_results, f, indent=2, ensure_ascii=False)
     
-        logger.info(f"\n📊 Comprehensive evaluation saved to: {output_file}")
+        logger.info(f"\nComprehensive evaluation saved to: {output_file}")
         logger.info("=" * 80)
     
     def _validate_results(self, llama32_results: List, qwen3_results: List, mistral_results: List) -> bool:
@@ -2058,6 +2058,7 @@ class EnsembleMultiModelDetector:
             filename_to_idx[fname] = idx
 
         def to_map(results: List[Dict]) -> Dict[str, Dict]:
+            """Index results by filename, dropping entries not in the original article list."""
             mapped: Dict[str, Dict] = {}
             for r in results:
                 fname = r.get('filename')

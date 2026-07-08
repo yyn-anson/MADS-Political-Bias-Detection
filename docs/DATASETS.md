@@ -4,7 +4,7 @@ Comprehensive guide to datasets used in the Multi-Agent Bias Detection System.
 
 ---
 
-## 📊 Supported Datasets
+## Supported Datasets
 
 ### 1. Baly Dataset (Baly et al., 2018, 2020)
 
@@ -108,7 +108,7 @@ Comprehensive guide to datasets used in the Multi-Agent Bias Detection System.
 }
 ```
 
-**Structure**: 100 articles × 13 outlets = 1,300 articles
+**Structure**: 100 articles x 13 outlets = 1,300 articles
 
 **Outlets**:
 1. CNN (left-leaning)
@@ -127,7 +127,7 @@ Comprehensive guide to datasets used in the Multi-Agent Bias Detection System.
 
 ---
 
-## 🛠️ Dataset Preparation
+## Dataset Preparation
 
 ### Creating Balanced Datasets
 
@@ -188,7 +188,7 @@ data/balanced_datasets/
 
 ---
 
-## 📈 Dataset Statistics
+## Dataset Statistics
 
 | Dataset | Total | Left | Center | Right | Outlets | Avg Length |
 |---------|-------|------|--------|-------|---------|------------|
@@ -199,7 +199,7 @@ data/balanced_datasets/
 
 ---
 
-## ✅ Dataset Validation
+## Dataset Validation
 
 ### Check Dataset Integrity
 
@@ -241,7 +241,7 @@ print('Content length:', len(article.get('content', '')))
 
 ---
 
-## 🎯 Ground Truth Mapping
+## Ground Truth Mapping
 
 ### Converting to Common Format
 
@@ -275,15 +275,19 @@ else: label = 1            # Center
 
 ---
 
-## 📥 Data Sources & Access
+## Data Sources & Access
 
 ### Baly Dataset
-- **Repository**: [Link to be added]
+- **Access**: Distributed by the original authors; the balanced evaluation
+  subset used here is included in this repository under
+  `data/balanced_datasets/balanced_baly/`
 - **License**: Research use
 - **Citation Required**: Yes
 
 ### Budak Dataset
-- **Repository**: [Link to be added]
+- **Access**: Distributed by the original authors; the balanced evaluation
+  subset used here is included in this repository under
+  `data/balanced_datasets/balanced_budak/`
 - **License**: Research use
 - **Citation Required**: Yes
 
@@ -301,7 +305,7 @@ For creating your own datasets:
 
 ---
 
-## 💡 Best Practices
+## Best Practices
 
 1. **Balance**: Always ensure equal class distribution
 2. **Quality**: Remove truncated or incomplete articles
@@ -311,7 +315,7 @@ For creating your own datasets:
 
 ---
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 **Issue**: "Dataset not found"
 ```bash

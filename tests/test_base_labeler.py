@@ -40,7 +40,7 @@ class _MinimalLabeler(BaseLabeler):
 
 
 class _RaisingLabeler(BaseLabeler):
-    """Predict always raises — used to verify error propagation."""
+    """Predict always raises - used to verify error propagation."""
     def load_model(self) -> None:
         pass
 
@@ -90,11 +90,11 @@ class TestScoreToDirection:
     @pytest.mark.parametrize("score,expected", [
         (-3,   "Left"),
         (-2,   "Left"),
-        (-1,   "Left"),     # boundary: exactly -1 → Left
-        (-0.5, "Center"),   # between -1 and 1 → Center
+        (-1,   "Left"),     # boundary: exactly -1 -> Left
+        (-0.5, "Center"),   # between -1 and 1 -> Center
         (0,    "Center"),
         (0.5,  "Center"),
-        (1,    "Right"),    # boundary: exactly 1 → Right
+        (1,    "Right"),    # boundary: exactly 1 -> Right
         (2,    "Right"),
         (3,    "Right"),
     ])
@@ -109,7 +109,7 @@ class TestScoreToDirection:
 
 
 # ---------------------------------------------------------------------------
-# label_articles_batch — default sequential implementation
+# label_articles_batch - default sequential implementation
 # ---------------------------------------------------------------------------
 
 class TestLabelArticlesBatch:
@@ -137,7 +137,7 @@ class TestLabelArticlesBatch:
         assert results[2]["lean"] == 3
 
     def test_predict_exception_propagates(self):
-        """Exceptions from predict() must NOT be swallowed — they must propagate."""
+        """Exceptions from predict() must NOT be swallowed - they must propagate."""
         labeler = _RaisingLabeler(model_name="test/model")
         with pytest.raises(RuntimeError, match="deliberate failure"):
             labeler.label_articles_batch(["some article"])
@@ -168,7 +168,7 @@ class TestUnloadModel:
 
     def test_safe_when_model_already_none(self):
         labeler = _MinimalLabeler(model_name="test/model")
-        # model is None by default — must not raise
+        # model is None by default - must not raise
         labeler.unload_model()
         assert labeler.model is None
 

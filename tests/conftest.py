@@ -4,12 +4,12 @@ Shared fixtures for all tests inside multi_agent_bias_detection/.
 All paths are resolved relative to the package root (parent of this tests/ dir),
 so this file works whether the package is run as a standalone repo or as a subfolder.
 
-  PACKAGE_ROOT  — multi_agent_bias_detection/
-  DATA_DIR      — multi_agent_bias_detection/data/
-  ALLSIDES_CSV  — data/allsides/AllSides_Rating.csv
-  LABELS_CSV    — data/article_outlet_labels.csv
-  EXCEL_PATH    — data/outlet_bias_reference.xlsx
-  LABELED_DIR   — data/labeled_articles/   (gitignored; created by running the script)
+  PACKAGE_ROOT  - multi_agent_bias_detection/
+  DATA_DIR      - multi_agent_bias_detection/data/
+  ALLSIDES_CSV  - data/allsides/AllSides_Rating.csv
+  LABELS_CSV    - data/article_outlet_labels.csv
+  EXCEL_PATH    - data/outlet_bias_reference.xlsx
+  LABELED_DIR   - data/labeled_articles/   (gitignored; created by running the script)
 """
 
 import json
@@ -30,6 +30,7 @@ EXPECTED_FOLDERS = {"Left", "Lean_Left", "Center", "Lean_Right", "Right", "Mixed
 
 @pytest.fixture(scope="session")
 def allsides_csv_path():
+    """Path to the AllSides ratings CSV; skip dependent tests when absent."""
     if not ALLSIDES_CSV.exists():
         pytest.skip(f"AllSides CSV not present: {ALLSIDES_CSV}")
     return ALLSIDES_CSV
@@ -37,23 +38,26 @@ def allsides_csv_path():
 
 @pytest.fixture(scope="session")
 def labels_csv_path():
+    """Path to the generated labels CSV; skip dependent tests when absent."""
     if not LABELS_CSV.exists():
-        pytest.skip("Labels CSV not present — run: python tools/label_articles_by_outlet.py")
+        pytest.skip("Labels CSV not present - run: python tools/label_articles_by_outlet.py")
     return LABELS_CSV
 
 
 @pytest.fixture(scope="session")
 def excel_path():
+    """Path to the generated Excel summary; skip dependent tests when absent."""
     if not EXCEL_PATH.exists():
-        pytest.skip("Excel file not present — run: python tools/label_articles_by_outlet.py")
+        pytest.skip("Excel file not present - run: python tools/label_articles_by_outlet.py")
     return EXCEL_PATH
 
 
 @pytest.fixture(scope="session")
 def labeled_dir():
+    """Path to the labeled-articles folder tree; skip dependent tests when absent."""
     if not LABELED_DIR.exists():
         pytest.skip(
-            "labeled_articles/ not present — run: python tools/label_articles_by_outlet.py\n"
+            "labeled_articles/ not present - run: python tools/label_articles_by_outlet.py\n"
             "(This directory is gitignored because it is 3.9 GB; regenerate locally.)"
         )
     return LABELED_DIR

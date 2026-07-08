@@ -23,8 +23,8 @@ data/article_outlet_labels.csv
     record_id, source_name, allsides_label, allsides_source_name, matched
 
 data/outlet_bias_reference.xlsx
-    Sheet "Outlet Labels"  — unique outlet -> AllSides label + match confidence
-    Sheet "Match Summary"  — per-label counts and match-rate statistics
+    Sheet "Outlet Labels"  - unique outlet -> AllSides label + match confidence
+    Sheet "Match Summary"  - per-label counts and match-rate statistics
 
 data/labeled_articles/
     Left/ Lean_Left/ Center/ Lean_Right/ Right/ Mixed/ no_label/
@@ -49,7 +49,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── label folders (spaces replaced with underscores for filesystem safety) ──
+# -- label folders (spaces replaced with underscores for filesystem safety) --
 LABEL_FOLDERS = {
     "Left":       "Left",
     "Lean Left":  "Lean_Left",
@@ -119,7 +119,7 @@ def _lookup(source_name: str, index: dict) -> tuple:
         if len(domain) > 4 and norm.endswith("." + domain):
             return name, label, True
 
-    # Prefix match — AllSides domain contained in article source_name
+    # Prefix match - AllSides domain contained in article source_name
     for domain, (name, label) in index.items():
         if len(domain) > 4 and domain in norm:
             return name, label, True
@@ -139,6 +139,8 @@ def run(
     out_labeled: Path,
     dry_run: bool,
 ) -> None:
+    """Label every article JSON by its outlet's AllSides rating and write
+    the CSV, Excel summary, and per-label folder outputs."""
     if not articles_dir.exists():
         raise FileNotFoundError(f"Articles directory not found: {articles_dir}")
     if not allsides_csv.exists():
@@ -149,7 +151,7 @@ def run(
     article_files = list(articles_dir.glob("*.json"))
     logger.info("Found %d article JSON files", len(article_files))
 
-    # ── first pass: collect all rows ────────────────────────────────────────
+    # -- first pass: collect all rows ----------------------------------------
     rows = []           # (record_id, source_name, allsides_label, allsides_source_name, matched)
     outlet_labels = {}  # source_name -> (allsides_source_name, label, matched)
     label_counter = Counter()
@@ -184,21 +186,21 @@ def run(
     matched_n  = sum(1 for r in rows if r[4])
     unmatched_n = total - matched_n
 
-    # ── summary ─────────────────────────────────────────────────────────────
-    logger.info("─" * 60)
+    # -- summary -------------------------------------------------------------
+    logger.info("-" * 60)
     logger.info("Total articles  : %d", total)
     logger.info("Matched         : %d  (%.1f%%)", matched_n, 100 * matched_n / max(total, 1))
     logger.info("Unmatched       : %d  (%.1f%%)", unmatched_n, 100 * unmatched_n / max(total, 1))
     logger.info("Per-label breakdown:")
     for lbl in ["Left", "Lean Left", "Center", "Lean Right", "Right", "Mixed", "no_label"]:
         logger.info("  %-12s : %d", lbl, label_counter.get(lbl, 0))
-    logger.info("─" * 60)
+    logger.info("-" * 60)
 
     if dry_run:
-        logger.info("Dry run — no files written.")
+        logger.info("Dry run - no files written.")
         return
 
-    # ── write CSV ────────────────────────────────────────────────────────────
+    # -- write CSV ------------------------------------------------------------
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     with open(out_csv, "w", newline="", encoding="utf-8") as fh:
         writer = csv.writer(fh)
@@ -207,12 +209,12 @@ def run(
             writer.writerow([record_id, source_name, label, allsides_source, matched])
     logger.info("CSV written: %s", out_csv)
 
-    # ── write Excel ──────────────────────────────────────────────────────────
+    # -- write Excel ----------------------------------------------------------
     try:
         import openpyxl
         from openpyxl.styles import Font, PatternFill
     except ImportError:
-        logger.warning("openpyxl not installed — skipping Excel output.  Install with: pip install openpyxl")
+        logger.warning("openpyxl not installed - skipping Excel output.  Install with: pip install openpyxl")
         out_excel = None
 
     if out_excel is not None:
@@ -257,7 +259,7 @@ def run(
         wb.save(out_excel)
         logger.info("Excel written: %s", out_excel)
 
-    # ── copy articles into labeled subfolders ────────────────────────────────
+    # -- copy articles into labeled subfolders --------------------------------
     out_labeled.mkdir(parents=True, exist_ok=True)
     for folder in LABEL_FOLDERS.values():
         (out_labeled / folder).mkdir(exist_ok=True)
@@ -280,6 +282,7 @@ def run(
 # ---------------------------------------------------------------------------
 
 def _parse_args() -> argparse.Namespace:
+    """Define and parse the command-line arguments."""
     repo_root = Path(__file__).resolve().parent.parent
 
     parser = argparse.ArgumentParser(

@@ -1,5 +1,5 @@
 """
-Tests for src/utils/json_extractor.py — RobustJSONExtractor.
+Tests for src/utils/json_extractor.py - RobustJSONExtractor.
 
 Covers:
   - Strategy 1: clean JSON string
@@ -22,7 +22,7 @@ from src.utils.json_extractor import RobustJSONExtractor
 
 
 # ---------------------------------------------------------------------------
-# extract_json — Strategy 1: clean JSON
+# extract_json - Strategy 1: clean JSON
 # ---------------------------------------------------------------------------
 
 class TestExtractJsonClean:
@@ -48,7 +48,7 @@ class TestExtractJsonClean:
 
 
 # ---------------------------------------------------------------------------
-# extract_json — Strategy 2: markdown code block
+# extract_json - Strategy 2: markdown code block
 # ---------------------------------------------------------------------------
 
 class TestExtractJsonMarkdown:
@@ -74,7 +74,7 @@ class TestExtractJsonMarkdown:
 
 
 # ---------------------------------------------------------------------------
-# extract_json — Strategy 3: JSON buried in text
+# extract_json - Strategy 3: JSON buried in text
 # ---------------------------------------------------------------------------
 
 class TestExtractJsonBuriedInText:
@@ -103,7 +103,7 @@ class TestExtractJsonBuriedInText:
 
 
 # ---------------------------------------------------------------------------
-# extract_json — edge cases: empty / None / non-string
+# extract_json - edge cases: empty / None / non-string
 # ---------------------------------------------------------------------------
 
 class TestExtractJsonEdgeCases:
@@ -123,12 +123,12 @@ class TestExtractJsonEdgeCases:
     def test_incomplete_json_returns_none_or_partial(self):
         # Should not crash, may return None or partial result
         result = RobustJSONExtractor.extract_json('{"lean": 1,')
-        # Either None or a partial dict — the key thing is no exception
+        # Either None or a partial dict - the key thing is no exception
         assert result is None or isinstance(result, dict)
 
 
 # ---------------------------------------------------------------------------
-# extract_json — Strategy 4: regex field extraction
+# extract_json - Strategy 4: regex field extraction
 # ---------------------------------------------------------------------------
 
 class TestExtractJsonRegexFallback:

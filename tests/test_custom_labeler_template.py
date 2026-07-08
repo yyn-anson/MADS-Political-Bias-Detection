@@ -133,7 +133,7 @@ class TestLoadModel:
 
 
 # ---------------------------------------------------------------------------
-# predict() — correct output contract
+# predict() - correct output contract
 # ---------------------------------------------------------------------------
 
 class TestPredict:
@@ -163,7 +163,7 @@ class TestPredict:
         labeler = _make_labeler()
         result = labeler.predict("Some article text")
         assert "error" not in result, (
-            "predict() must not include an 'error' key on success — "
+            "predict() must not include an 'error' key on success - "
             "use exceptions for failure signalling"
         )
 
@@ -218,7 +218,7 @@ class TestPredict:
 
 
 # ---------------------------------------------------------------------------
-# predict() — error propagation
+# predict() - error propagation
 # ---------------------------------------------------------------------------
 
 class TestPredictErrorPropagation:
@@ -252,6 +252,7 @@ class TestPredictErrorPropagation:
         load_called = []
 
         def fake_load():
+            """Record the call and attach a fresh mock client."""
             load_called.append(1)
             labeler._client = fresh_client
 

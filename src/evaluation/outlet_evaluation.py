@@ -12,13 +12,13 @@ The ensemble models output a raw bias score on a -3 to +3 integer scale
 (same prompts and parsing as the standard batch evaluation). This module
 uses those raw scores in two ways:
 
-* Violin / beeswarm plots  — raw -3..+3 scores are plotted directly,
+* Violin / beeswarm plots  - raw -3..+3 scores are plotted directly,
   showing the full per-article distribution for each outlet.
-* Accuracy / F1 metrics    — scores are collapsed to 3 classes before
+* Accuracy / F1 metrics    - scores are collapsed to 3 classes before
   comparison with AllSides ground truth:
-      score <= -1  →  Left
-      -1 < score < 1  →  Center
-      score >= 1  →  Right
+      score <= -1  ->  Left
+      -1 < score < 1  ->  Center
+      score >= 1  ->  Right
 
 No separate prompt or output-parser is needed for outlet evaluation;
 the only difference from batch evaluation is that results are aggregated
@@ -736,6 +736,7 @@ class MediaOutletEvaluator:
         
         # Color violins based on ground truth using AllSides colors
         def get_violin_color(ground_truth):
+            """Map an AllSides ground-truth class to its plot color."""
             if ground_truth == 'Left':
                 return '#2166ac'  # Blue for Left
             elif ground_truth == 'Center':
@@ -1045,6 +1046,7 @@ class MediaOutletEvaluator:
         
         # Define color scheme
         def get_color(class_name):
+            """Map a bias class name to its plot color."""
             return {'Left': '#2166ac', 'Center': '#808080', 'Right': '#b2182b'}[class_name]
         
         # Create bars for mean scores with error bars
@@ -1065,7 +1067,7 @@ class MediaOutletEvaluator:
         # Add outlet labels with ground truth indicators
         labels = []
         for d in outlet_data:
-            checkmark = '✓' if d['correct'] else '✗'
+            checkmark = '[OK]' if d['correct'] else '[X]'
             labels.append(f"{d['name']}\n({d['ground_truth'][0]}) {checkmark}")
         
         ax.set_xticks(x)
@@ -1091,7 +1093,7 @@ class MediaOutletEvaluator:
         
         # Set plot properties
         ax.set_ylim(-3.5, 3.5)
-        ax.set_ylabel('Political Bias Score (Mean ± Std Dev)', fontsize=18, fontweight='bold')
+        ax.set_ylabel('Political Bias Score (Mean +/- Std Dev)', fontsize=18, fontweight='bold')
         ax.set_title('Media Outlet Predictions vs Ground Truth', fontsize=20, fontweight='bold', pad=20)
 
         # Set tick label sizes

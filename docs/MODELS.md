@@ -1,6 +1,6 @@
 # Model Specifications
 
-All models are served by [vLLM](https://github.com/vllm-project/vllm) and accessed via the OpenAI-compatible HTTP API. The Python client only makes HTTP calls — no GPU drivers or local model weights are required on the client machine.
+All models are served by [vLLM](https://github.com/vllm-project/vllm) and accessed via the OpenAI-compatible HTTP API. The Python client only makes HTTP calls - no GPU drivers or local model weights are required on the client machine.
 
 ---
 
@@ -21,19 +21,19 @@ Suited for a single A100-40 GB or two consumer GPUs.
 Open **three separate terminals** and run one command per terminal:
 
 ```bash
-# Terminal 1 — Llama-3.2-3B
+# Terminal 1 - Llama-3.2-3B
 vllm serve meta-llama/Llama-3.2-3B-Instruct \
     --port 8001 \
     --api-key token-abc123 \
     --max-model-len 16384
 
-# Terminal 2 — Qwen3-4B  (thinking mode is enabled in the prompt, no extra flag needed)
+# Terminal 2 - Qwen3-4B  (thinking mode is enabled in the prompt, no extra flag needed)
 vllm serve Qwen/Qwen3-4B \
     --port 8002 \
     --api-key token-abc123 \
     --max-model-len 16384
 
-# Terminal 3 — Mistral-7B
+# Terminal 3 - Mistral-7B
 vllm serve mistralai/Mistral-7B-Instruct-v0.3 \
     --port 8003 \
     --api-key token-abc123 \
@@ -46,7 +46,7 @@ Wait until each server prints `INFO:     Application startup complete` before ru
 
 ### Regular Ensemble (~112 GB VRAM total)
 
-Requires multi-GPU (e.g., 4× A100-80 GB or equivalent).
+Requires multi-GPU (e.g., 4x A100-80 GB or equivalent).
 
 | Role | Model | Size | VRAM (BF16) | Port (default) |
 |------|-------|------|-------------|----------------|
@@ -57,19 +57,19 @@ Requires multi-GPU (e.g., 4× A100-80 GB or equivalent).
 #### Starting the regular ensemble servers
 
 ```bash
-# Terminal 1 — Qwen3-14B
+# Terminal 1 - Qwen3-14B
 vllm serve Qwen/Qwen3-14B \
     --port 8001 \
     --api-key token-abc123 \
     --max-model-len 32768
 
-# Terminal 2 — GPT-OSS-20B
+# Terminal 2 - GPT-OSS-20B
 vllm serve openai/gpt-oss-20b \
     --port 8002 \
     --api-key token-abc123 \
     --max-model-len 8192
 
-# Terminal 3 — Mistral-Small-22B
+# Terminal 3 - Mistral-Small-22B
 vllm serve mistralai/Mistral-Small-Instruct-2409 \
     --port 8003 \
     --api-key token-abc123 \

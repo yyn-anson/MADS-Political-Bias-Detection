@@ -4,7 +4,7 @@ Step-by-step instructions for reproducing all experiments in the Multi-Agent Bia
 
 ---
 
-## 🎯 Prerequisites
+## Prerequisites
 
 ### Hardware Requirements
 
@@ -39,13 +39,13 @@ Step-by-step instructions for reproducing all experiments in the Multi-Agent Bia
 
 ---
 
-## 📥 Step 1: Environment Setup
+## Step 1: Environment Setup
 
 ### Clone Repository
 
 ```bash
-git clone https://github.com/your-username/multi_agent_bias_detection.git
-cd multi_agent_bias_detection
+git clone https://github.com/yyn-anson/MADS-Political-Bias-Detection.git
+cd MADS-Political-Bias-Detection
 ```
 
 ### Create Virtual Environment
@@ -68,34 +68,32 @@ venv\Scripts\activate  # Windows
 
 ```bash
 pip install -r requirements.txt
-
-# Verify PyTorch CUDA
-python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}')"
 ```
+
+The client makes HTTP calls only; it does not need PyTorch, CUDA, or a GPU.
+CUDA is required only on the machine running the vLLM servers.
 
 ### Set HuggingFace Token
 
 ```bash
-# Get token from https://huggingface.co/settings/tokens
+# Needed on the GPU server to download gated models (e.g. Llama).
+# Get a token from https://huggingface.co/settings/tokens
 export HF_TOKEN="hf_your_token_here"
-
-# Or add to config.py
-# config['huggingface']['token'] = 'hf_your_token_here'
 ```
 
 ---
 
-## 📊 Step 2: Dataset Preparation
+## Step 2: Dataset Preparation
 
-### Download Pre-Balanced Datasets (Recommended)
+### Use the Included Balanced Datasets (Recommended)
+
+The balanced Baly, Budak, and Ad Fontes datasets are included in this
+repository under `data/balanced_datasets/`.
 
 ```bash
-# Download from [link to be added]
-# Extract to data/balanced_datasets/
-
 # Verify structure
 ls data/balanced_datasets/balanced_baly/
-# Should see: article_*.json files + dataset_manifest.json
+# Should see: NNNN_*.json article files + dataset_manifest.json
 ```
 
 ### OR Create Balanced Datasets from Raw Data
@@ -130,7 +128,7 @@ python tools/create_balanced_dataset.py --dataset custom --samples-per-outlet 10
 
 ---
 
-## 🧪 Step 3: Run Experiments
+## Step 3: Run Experiments
 
 ### Experiment 1: Small Ensemble on Baly Dataset
 
@@ -221,7 +219,7 @@ ensemble_outputs/outlet_evaluation_TIMESTAMP/
 
 ---
 
-## 📈 Step 4: Analyze Results
+## Step 4: Analyze Results
 
 ### View Aggregated Metrics
 
@@ -271,7 +269,7 @@ cat ensemble_outputs_small/$SESSION/aggregated_results.json | \
 
 ---
 
-## 🔬 Step 5: Advanced Experiments
+## Step 5: Advanced Experiments
 
 ### Vary Batch Size
 
@@ -309,7 +307,7 @@ echo "Regular ensemble: $REGULAR"
 
 ---
 
-## 📊 Step 6: Generate Publication Figures
+## Step 6: Generate Publication Figures
 
 ### Outlet Comparison Plot
 
@@ -356,7 +354,7 @@ print(df.to_latex())  # For LaTeX papers
 
 ---
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Out of Memory Errors
 
@@ -368,26 +366,27 @@ python run_batches.py --model small --dataset baly --batch-size 2
 python run_batches.py --model small --dataset baly
 ```
 
-### Model Download Failures
+### Model Download Failures (on the GPU server)
 
 ```bash
 # Check token
 echo $HF_TOKEN
 
-# Manually download model
+# Manually download the model, then point vllm serve at it
 huggingface-cli login
-huggingface-cli download Qwen/Qwen3-14B --local-dir models/models--Qwen--Qwen3-14B
+huggingface-cli download Qwen/Qwen3-14B
 ```
 
-### CUDA Errors
+### Server Not Reachable
 
 ```bash
-# Verify CUDA
-nvidia-smi
-python -c "import torch; print(torch.cuda.is_available())"
+# On the GPU machine: confirm each vLLM server printed
+#   INFO:     Application startup complete.
 
-# Clear CUDA cache
-python -c "import torch; torch.cuda.empty_cache()"
+# From the client: verify each endpoint responds
+curl http://localhost:8001/v1/models -H "Authorization: Bearer token-abc123"
+curl http://localhost:8002/v1/models -H "Authorization: Bearer token-abc123"
+curl http://localhost:8003/v1/models -H "Authorization: Bearer token-abc123"
 ```
 
 ### Dataset Loading Errors
@@ -406,21 +405,16 @@ print(f'Total articles: {manifest[\"total_articles\"]}')
 ### Slow Processing
 
 ```bash
-# Check GPU usage
+# On the GPU machine: check utilization while a batch is running
 nvidia-smi
 
-# Verify not running on CPU
-python -c "
-import torch
-from transformers import AutoModel
-model = AutoModel.from_pretrained('Qwen/Qwen3-4B-Instruct')
-print(f'Model device: {next(model.parameters()).device}')
-"
+# If VRAM is exhausted, restart the servers with a smaller context window
+# by adding --max-model-len 8192 to each vllm serve command
 ```
 
 ---
 
-## ✅ Validation Checklist
+## Validation Checklist
 
 Before publishing results:
 
@@ -428,14 +422,14 @@ Before publishing results:
 - [ ] Models loaded successfully (check logs for errors)
 - [ ] GPU utilization confirmed (nvidia-smi)
 - [ ] Results reproducible (same random seed, same dataset)
-- [ ] Metrics match expected ranges (accuracy 60-80%)
+- [ ] Metrics computed for all articles (see aggregated_results.json)
 - [ ] Discussion triggered for ~15-20% of articles
 - [ ] Outlet evaluation generated all plots
 - [ ] No articles skipped due to errors (check stats)
 
 ---
 
-## 📚 Expected Timeline
+## Expected Timeline
 
 | Task | Small Ensemble | Regular Ensemble |
 |------|----------------|------------------|
@@ -449,30 +443,6 @@ Before publishing results:
 
 ---
 
-## 📞 Getting Help
+## Citation
 
-If you encounter issues:
-
-1. **Check documentation**: README.md, QUICKSTART.md
-2. **Search issues**: GitHub issues page
-3. **Create issue**: Provide error logs, system info
-4. **Email**: your.email@institution.edu
-
----
-
-## 🎓 Citation
-
-When using this system in research:
-
-```bibtex
-@article{your2025multiagent,
-  title={Multi-Agent Collaborative Discussion for Political Bias Detection},
-  author={Your Name and Colleagues},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
-  year={2025}
-}
-```
-
----
-
-**Good luck with your experiments! 🚀**
+If you use this system in your research, please cite the original paper.

@@ -118,7 +118,7 @@ python run_batches.py --model small --dataset baly --total 10
 python run_batches.py --model regular --dataset baly --total 10
 ```
 
-Expected console output (metric values depend on your models — refer to the
+Expected console output (metric values depend on your models - refer to the
 original paper for reported performance):
 
 ```
@@ -154,8 +154,8 @@ Aggregated results saved to: ensemble_outputs_small\session_20260101_120000\aggr
 ```
 
 During each batch the ensemble phases appear in the logs:
-`PHASE 1: Individual Model Analysis` → `PHASE 2: Collaborative Discussion for
-Disagreements` → (when all three models disagree) `Article N: Triggering
+`PHASE 1: Individual Model Analysis` -> `PHASE 2: Collaborative Discussion for
+Disagreements` -> (when all three models disagree) `Article N: Triggering
 collaborative discussion` with round-by-round score adjustments.
 
 ---
@@ -179,11 +179,11 @@ ensemble_outputs_small/session_TIMESTAMP/
 ├── individual_models/               # Per-model accuracy vs ground truth
 └── collaborative_discussions/       # Full debate transcripts
     └── article_0003/
-        ├── discussion_summary.json  #   initial → final positions per agent
+        ├── discussion_summary.json  #   initial -> final positions per agent
         └── round_*_..._prompt/_response.txt   # every prompt & raw reply
 ```
 
-Example `final_decision.json` — all three models agreed, so the final score is
+Example `final_decision.json` - all three models agreed, so the final score is
 their average and no discussion was needed:
 
 ```json
@@ -230,7 +230,7 @@ python run_batches.py --model small --dataset ad_fontes --total 100
 
 ## Swapping a model (no code changes)
 
-Any of the three slots can serve a different model — set the slot's env vars
+Any of the three slots can serve a different model - set the slot's env vars
 and run as usual:
 
 ```bash

@@ -48,7 +48,7 @@ class TestNormaliseDomain:
         assert _normalise_domain("https://example.com:8080/path") == "example.com"
 
     def test_subdomain_preserved(self):
-        # Subdomains are kept intact — matching logic handles them separately
+        # Subdomains are kept intact - matching logic handles them separately
         assert _normalise_domain("politics.nytimes.com") == "politics.nytimes.com"
 
     def test_no_www_prefix(self):
@@ -123,6 +123,7 @@ class TestBuildAllsidesIndex:
 class TestLookup:
     @pytest.fixture
     def index(self):
+        """Small in-memory AllSides domain index used by the lookup tests."""
         return {
             "cnn.com":       ("CNN",         "Lean Left"),
             "foxnews.com":   ("Fox News",    "Right"),
@@ -143,7 +144,7 @@ class TestLookup:
         assert label == "Right"
 
     def test_subdomain_match(self, index):
-        # 'opinion.reuters.com' ends with '.reuters.com' — should match
+        # 'opinion.reuters.com' ends with '.reuters.com' - should match
         name, label, matched = _lookup("opinion.reuters.com", index)
         assert matched is True
         assert label == "Center"
@@ -171,7 +172,7 @@ class TestLookup:
 
 
 # ---------------------------------------------------------------------------
-# run() — full pipeline with tmp dirs
+# run() - full pipeline with tmp dirs
 # ---------------------------------------------------------------------------
 
 class TestRunPipeline:

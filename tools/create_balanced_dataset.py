@@ -659,6 +659,7 @@ def find_balanced_dataset(config: Dict, dataset_type: str) -> Optional[Path]:
 
 
 def main():
+    """Command-line entry point: parse arguments and create the requested dataset."""
     parser = argparse.ArgumentParser(
         description='Create balanced dataset for ensemble evaluation',
         formatter_class=argparse.RawDescriptionHelpFormatter,

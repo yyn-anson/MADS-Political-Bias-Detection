@@ -32,6 +32,7 @@ class BaseLabeler(ABC):
     """
 
     def __init__(self, model_name: str, cache_dir: str = "models/", batch_size: int = 1):
+        """Store the model identity and batching configuration common to all labelers."""
         self.model_name = model_name
         self.cache_dir = cache_dir
         self.batch_size = batch_size
@@ -76,7 +77,7 @@ class BaseLabeler(ABC):
             List of prediction dicts, one per prompt.
 
         Raises:
-            Any exception raised by predict() — callers must handle errors explicitly.
+            Any exception raised by predict() - callers must handle errors explicitly.
         """
         return [self.predict(prompt) for prompt in prompts]
 
@@ -156,4 +157,5 @@ class BaseLabeler(ABC):
         return "Center"
 
     def __repr__(self) -> str:
+        """Return a short description with class name, model, and batch size."""
         return f"{self.__class__.__name__}(model={self.model_name}, batch_size={self.batch_size})"

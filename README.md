@@ -147,7 +147,7 @@ All models rate each article on a **-3 to +3 integer scale**:
 | +2 | Moderate right |
 | +3 | Strong right |
 
-For **accuracy / F1 metrics** the score is collapsed to 3 classes: score ≤ -1 → Left, -1 < score < 1 → Center, score ≥ 1 → Right.
+For **accuracy / F1 metrics** the score is collapsed to 3 classes: score <= -1 -> Left, -1 < score < 1 -> Center, score >= 1 -> Right.
 For **outlet-level violin plots** the raw -3..+3 scores are used directly, showing the full distribution of individual article predictions per outlet.
 
 ---
@@ -297,7 +297,7 @@ This structured approach significantly improves accuracy over simple averaging o
 For reported benchmark performance (Baly, Budak, Ad Fontes), please refer to the original paper.
 
 Numbers vary with model versions, prompts, sampling parameters, and hardware. To measure
-performance on your own setup, run the pipeline on a balanced dataset — per-model,
+performance on your own setup, run the pipeline on a balanced dataset - per-model,
 consensus-only, overall-ensemble, and ablation metrics are produced automatically in
 `aggregated_results.json`:
 
@@ -330,15 +330,6 @@ For more troubleshooting, see [docs/REPRODUCTION.md](docs/REPRODUCTION.md#troubl
 
 ## Citation
 
-If you use this system in your research, please cite:
-
-```bibtex
-@article{your2026multiagent,
-  title={Multi-Agent Collaborative Discussion for Political Bias Detection},
-  author={Your Name and Colleagues},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
-  year={2026}
-}
-```
+If you use this system in your research, please cite the original paper.
 
 ---

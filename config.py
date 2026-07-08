@@ -11,6 +11,8 @@ from pathlib import Path
 
 
 def get_config() -> Dict[str, Any]:
+    """Build the full configuration dictionary: directories, vLLM endpoints
+    (env-overridable), dataset paths, and ensemble runtime settings."""
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
     dirs = {
@@ -26,7 +28,7 @@ def get_config() -> Dict[str, Any]:
     config = {
         'dirs': dirs,
 
-        # ── vLLM server configuration ──────────────────────────────────────
+        # -- vLLM server configuration --------------------------------------
         # Each model runs as a separate vLLM server instance.
         # Override with environment variables for custom deployments.
         #
@@ -44,7 +46,7 @@ def get_config() -> Dict[str, Any]:
 
             # Any of the three slots can be swapped for a different model:
             # point the slot's *_URL at your server and set *_MODEL to the
-            # served model ID. No code changes are needed — every labeler
+            # served model ID. No code changes are needed - every labeler
             # speaks the same OpenAI-compatible protocol and JSON contract.
             'small_ensemble': {
                 'llama32': {
@@ -79,7 +81,7 @@ def get_config() -> Dict[str, Any]:
             },
         },
 
-        # ── Dataset configurations ─────────────────────────────────────────
+        # -- Dataset configurations -----------------------------------------
         'datasets': {
             'baly': {
                 'path':            os.path.join(dirs['balanced_datasets'], 'balanced_baly'),
@@ -103,12 +105,12 @@ def get_config() -> Dict[str, Any]:
             },
         },
 
-        # ── File paths ────────────────────────────────────────────────────
+        # -- File paths ----------------------------------------------------
         'files': {
             'allsides_ratings': os.path.join(dirs['data'], 'allsides', 'AllSides_Rating.csv'),
         },
 
-        # ── Ensemble runtime settings ──────────────────────────────────────
+        # -- Ensemble runtime settings --------------------------------------
         'ensemble': {
             'max_discussion_rounds':  8,
             'convergence_threshold':  0.5,
@@ -121,7 +123,7 @@ def get_config() -> Dict[str, Any]:
             'timeout_per_batch':  7200,       # seconds
         },
 
-        # ── HuggingFace token (for downloading gated models via CLI) ───────
+        # -- HuggingFace token (for downloading gated models via CLI) -------
         # Set:  $env:HF_TOKEN="hf_..."   (PowerShell)
         #       export HF_TOKEN="hf_..."  (Linux/macOS)
         'huggingface': {

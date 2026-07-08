@@ -4,7 +4,7 @@ This directory contains balanced datasets for political bias detection evaluatio
 
 ---
 
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 data/
@@ -17,7 +17,7 @@ data/
 
 ---
 
-## 🎯 What You Need
+## What You Need
 
 Each dataset folder should contain:
 1. **Article JSON files** - Individual articles with metadata
@@ -25,31 +25,30 @@ Each dataset folder should contain:
 
 ---
 
-## 📥 Option 1: Download Pre-Balanced Datasets (Recommended)
+## Option 1: Use the Included Balanced Datasets (Recommended)
+
+The balanced evaluation datasets ship with this repository:
 
 ### Baly Dataset
-- **Size**: ~1000 articles
-- **Source**: [Download link to be added]
-- **Extract to**: `data/balanced_datasets/balanced_baly/`
+- **Size**: 3000 articles
+- **Location**: `data/balanced_datasets/balanced_baly/`
 
 ### Budak Dataset
-- **Size**: ~500 articles
-- **Source**: [Download link to be added]
-- **Extract to**: `data/balanced_datasets/balanced_budak/`
+- **Size**: 10 articles (sample; regenerate a larger set with Option 2)
+- **Location**: `data/balanced_datasets/balanced_budak/`
 
 ### Ad Fontes Dataset
-- **Size**: ~800 articles
-- **Source**: [Download link to be added]
-- **Extract to**: `data/balanced_datasets/balanced_ad_fontes/`
+- **Size**: 3000 articles
+- **Location**: `data/balanced_datasets/balanced_ad_fontes/`
 
 ### Custom Outlet Dataset
-- **Size**: 100 articles × 13 outlets = 1300 articles
-- **Source**: [Download link to be added]
-- **Extract to**: `data/balanced_datasets/custom_100_per_outlet/`
+- **Size**: 100 articles x 13 outlets (not included; user-provided)
+- **Location**: `data/balanced_datasets/custom_100_per_outlet/`
+- **Create with**: `python tools/create_balanced_dataset.py --dataset custom --samples-per-outlet 100`
 
 ---
 
-## 🛠️ Option 2: Create Balanced Datasets from Raw Data
+## Option 2: Create Balanced Datasets from Raw Data
 
 If you have raw datasets, use the balancing tool:
 
@@ -71,7 +70,7 @@ python tools/create_balanced_dataset.py --dataset custom --samples-per-outlet 10
 
 ---
 
-## 📄 Dataset Format
+## Dataset Format
 
 ### Article JSON File Format
 
@@ -124,7 +123,7 @@ The `dataset_manifest.json` file contains dataset metadata:
 
 ---
 
-## ✅ Verify Dataset
+## Verify Dataset
 
 After placing or creating datasets, verify they're correctly formatted:
 
@@ -154,7 +153,7 @@ print(f'Balance: {manifest[\"balance\"]}')
 
 ---
 
-## 📊 Dataset Characteristics
+## Dataset Characteristics
 
 ### Baly Dataset
 - **Papers**: Baly et al. (2018, 2020)
@@ -176,13 +175,13 @@ print(f'Balance: {manifest[\"balance\"]}')
 
 ### Custom Outlet Dataset
 - **Purpose**: Outlet-level bias evaluation
-- **Structure**: 100 articles per outlet × 13 outlets
+- **Structure**: 100 articles per outlet x 13 outlets
 - **Outlets**: CNN, BBC, Fox News, NYT, MSNBC, etc.
 - **No Ground Truth**: Designed for outlet comparison, not accuracy evaluation
 
 ---
 
-## 🔍 Data Sources
+## Data Sources
 
 ### Original Papers
 - Baly, R., et al. (2018). "Predicting factuality of reporting and bias of news media sources." EMNLP.
@@ -196,7 +195,7 @@ print(f'Balance: {manifest[\"balance\"]}')
 
 ---
 
-## 💡 Tips
+## Tips
 
 1. **Start Small**: Test with 10-100 articles first to verify everything works
 2. **Balance Matters**: Ensure equal representation of left/center/right for fair evaluation
@@ -205,7 +204,7 @@ print(f'Balance: {manifest[\"balance\"]}')
 
 ---
 
-## 🆘 Troubleshooting
+## Troubleshooting
 
 ### "Dataset not found" error
 ```bash
@@ -232,7 +231,7 @@ python -c "import json; print(json.load(open('data/balanced_datasets/balanced_ba
 
 ---
 
-## 📧 Need Help?
+## Need Help?
 
 - See [docs/DATASETS.md](../docs/DATASETS.md) for detailed dataset information
 - Open an issue on GitHub for dataset-related questions

@@ -15,7 +15,7 @@ from src.utils.json_extractor import RobustJSONExtractor
 
 logger = logging.getLogger(__name__)
 
-# ── Prompts ───────────────────────────────────────────────────────────────────
+# -- Prompts -------------------------------------------------------------------
 
 _SYSTEM_PROMPT = """\
 You are an expert media analyst specializing in political bias detection.
@@ -85,9 +85,10 @@ Note: Articles that lean toward Democratic viewpoints should score at most -1.
 Articles that lean toward Republican viewpoints should score at least 1.\
 """
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+# -- Helpers -------------------------------------------------------------------
 
 def _build_challenge_user(article_content, conversation_history, own_analysis, target_analysis):
+    """Build the user prompt asking this model to challenge another model's analysis."""
     return (
         f"ARTICLE CONTENT:\n{article_content}\n\n"
         f"YOUR ANALYSIS:\nScore: {own_analysis['score']} ({own_analysis['direction']})\n"
@@ -106,6 +107,7 @@ def _build_challenge_user(article_content, conversation_history, own_analysis, t
 
 
 def _build_response_user(article_content, conversation_history, challenge, own_analysis, challenger_analysis):
+    """Build the user prompt asking this model to respond to a challenge against its analysis."""
     return (
         f"ARTICLE CONTENT:\n{article_content}\n\n"
         f"YOUR INITIAL ANALYSIS:\nScore: {own_analysis['score']} ({own_analysis['direction']})\n"
@@ -125,7 +127,7 @@ def _build_response_user(article_content, conversation_history, challenge, own_a
     )
 
 
-# ── Labeler ───────────────────────────────────────────────────────────────────
+# -- Labeler -------------------------------------------------------------------
 
 class GPTOSSLabeler(BaseLabeler):
     """Political bias labeler using GPT-OSS-20B served by vLLM.
@@ -148,6 +150,7 @@ class GPTOSSLabeler(BaseLabeler):
         top_p: float = 0.9,
         batch_size: int = 1,
     ):
+        """Configure the vLLM endpoint, served model ID, and generation parameters."""
         super().__init__(model_name=model_id, batch_size=batch_size)
         self._base_url = base_url
         self._api_key = api_key
@@ -156,7 +159,7 @@ class GPTOSSLabeler(BaseLabeler):
         self._top_p = top_p
         self._client: Optional[OpenAI] = None
 
-    # ── BaseLabeler interface ─────────────────────────────────────────────────
+    # -- BaseLabeler interface -------------------------------------------------
 
     def load_model(self) -> None:
         """Connect to the vLLM server and verify it is reachable."""
@@ -222,7 +225,7 @@ class GPTOSSLabeler(BaseLabeler):
         """Drop the client connection (vLLM server keeps running)."""
         self._client = None
 
-    # ── Discussion support ────────────────────────────────────────────────────
+    # -- Discussion support ----------------------------------------------------
 
     def generate_discussion_challenge(
         self,
@@ -231,6 +234,11 @@ class GPTOSSLabeler(BaseLabeler):
         own_analysis: Dict,
         target_analysis: Dict,
     ) -> Tuple[str, str]:
+        """Generate a structured challenge against target_analysis.
+
+        Returns:
+            Tuple of (user prompt sent, raw model response).
+        """
         if self._client is None:
             self.load_model()
 
@@ -259,6 +267,11 @@ class GPTOSSLabeler(BaseLabeler):
         own_analysis: Dict,
         challenger_analysis: Dict,
     ) -> Tuple[str, Dict]:
+        """Respond to a challenge, possibly revising the bias score.
+
+        Returns:
+            Tuple of (user prompt sent, dict with lean/reason/raw_response).
+        """
         if self._client is None:
             self.load_model()
 

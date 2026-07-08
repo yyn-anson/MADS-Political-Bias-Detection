@@ -3,7 +3,7 @@ Regression tests: a model that outputs a lean of exactly 0 (Neutral/Center)
 must be handled like any other score.
 
 An earlier version used `parsed.get("lean") or parsed.get("final_score")`,
-which treats 0 as falsy — predict() then raised "missing 'lean' field" and the
+which treats 0 as falsy - predict() then raised "missing 'lean' field" and the
 article was dropped, silently discarding Center-scored articles. The same
 pattern in generate_discussion_response() made agents unable to revise their
 position to Center during discussion.
@@ -26,11 +26,13 @@ from src.models.gptoss_labeler import GPTOSSLabeler
 
 
 def _make_labeler(cls):
+    """Construct a labeler of the given class with dummy connection settings."""
     kwargs = dict(base_url="http://localhost:9/v1", model_id="test/model", api_key="k")
     return cls(**kwargs)
 
 
 def _mock_client(content: str) -> MagicMock:
+    """Build a mock OpenAI client whose chat completion returns the given content."""
     client = MagicMock()
     client.chat.completions.create.return_value = SimpleNamespace(
         choices=[SimpleNamespace(message=SimpleNamespace(content=content))]

@@ -4,7 +4,7 @@ This document describes the architecture of the Multi-Agent Political Bias Detec
 
 ---
 
-## 🏗️ System Overview
+## System Overview
 
 The system employs a collaborative multi-agent framework where three independent LLMs analyze articles and engage in structured discussions to reach consensus on political bias detection.
 
@@ -13,44 +13,44 @@ The system employs a collaborative multi-agent framework where three independent
 │                    ENSEMBLE COORDINATOR                      │
 └─────────────────┬───────────────────────────────────────────┘
                   │
-                  ▼
+                  v
         ┌─────────────────┐
         │  Phase 1:       │
         │  Individual     │
         │  Analysis       │
         └────┬────────────┘
              │
-             ├──► Model 1 (Qwen3/Llama3.2) → Score, Direction, Reasoning
-             ├──► Model 2 (GPT-OSS/Qwen3-4B) → Score, Direction, Reasoning
-             └──► Model 3 (Mistral-Small) → Score, Direction, Reasoning
+             ├──> Model 1 (Qwen3/Llama3.2) > Score, Direction, Reasoning
+             ├──> Model 2 (GPT-OSS/Qwen3-4B) > Score, Direction, Reasoning
+             └──> Model 3 (Mistral-Small) > Score, Direction, Reasoning
                   │
-                  ▼
+                  v
         ┌─────────────────┐
         │  Phase 2:       │
         │  Consensus      │
         │  Check          │
         └────┬────────────┘
              │
-             ├──► All agree? → Final Result
-             ├──► 2/3 agree? → Majority Result
-             └──► All differ? → Phase 3
+             ├──> All agree? > Final Result
+             ├──> 2/3 agree? > Majority Result
+             └──> All differ? > Phase 3
                        │
-                       ▼
+                       v
         ┌──────────────────────────┐
         │  Phase 3:                │
         │  Two-Stage Discussion    │
         └──────┬───────────────────┘
                │
-               ├─► Stage 1: All-model debate
+               ├─> Stage 1: All-model debate
                │   Until majority consensus
                │
-               └─► Stage 2: Winner vs Minority
+               └─> Stage 2: Winner vs Minority
                    Final convergence
 ```
 
 ---
 
-## 🔄 Processing Workflow
+## Processing Workflow
 
 ### 1. Batch Processing
 
@@ -81,14 +81,14 @@ for batch in article_batches:
 Each model independently analyzes articles:
 
 ```
-Input Article → Model Pipeline → Output
+Input Article > Model Pipeline > Output
                      │
-                     ├─► Tokenization
-                     ├─► Context injection
-                     ├─► LLM inference
-                     └─► JSON extraction
+                     ├─> Tokenization
+                     ├─> Context injection
+                     ├─> LLM inference
+                     └─> JSON extraction
                               │
-                              ▼
+                              v
                         {
                           "lean": -2.0,
                           "reason": "Analysis...",
@@ -107,18 +107,18 @@ Three consensus scenarios:
 
 ```
 Scenario 1: Unanimous (All 3 agree)
-  Left + Left + Left → CONSENSUS: Left (average score)
+  Left + Left + Left > CONSENSUS: Left (average score)
 
 Scenario 2: Majority (2/3 agree)
-  Left + Left + Right → CONSENSUS: Left (average of matching)
+  Left + Left + Right > CONSENSUS: Left (average of matching)
 
 Scenario 3: Complete Disagreement (All differ)
-  Left + Center + Right → DISCUSSION TRIGGERED
+  Left + Center + Right > DISCUSSION TRIGGERED
 ```
 
 ---
 
-## 💬 Two-Stage Discussion Framework
+## Two-Stage Discussion Framework
 
 ### Stage 1: All-Model Debate
 
@@ -133,9 +133,9 @@ Scenario 3: Complete Disagreement (All differ)
 ```
 Round 1:
   Qwen (Left) challenges GPT-OSS (Right)
-  ├─► Challenge: "I argue Left because..."
-  ├─► Response: "I maintain Right because..."
-  └─► Position updates checked
+  ├─> Challenge: "I argue Left because..."
+  ├─> Response: "I maintain Right because..."
+  └─> Position updates checked
 
 Round 2:
   Mistral (Center) challenges Qwen (Left)
@@ -145,9 +145,9 @@ Continue until 2/3 agree or max rounds
 ```
 
 **Termination Conditions**:
-- ✅ Full consensus (all 3 agree)
-- ✅ Majority reached (2/3 agree)
-- ⏱️ Max rounds (8)
+- Full consensus (all 3 agree)
+- Majority reached (2/3 agree)
+- Max rounds (8)
 
 ### Stage 2: Winner vs. Minority
 
@@ -165,13 +165,13 @@ Stage 1 Result: 2 models say Left, 1 says Right
 
 Stage 2:
   Representative (Qwen, Left) vs Minority (GPT-OSS, Right)
-  ├─► Challenge: Representative argues for Left
-  ├─► Response: Minority responds
-  └─► Winner determination:
-       ├─► Did minority converge to Left? → Representative wins
-       ├─► Did representative converge to Right? → Minority wins
-       ├─► Both maintain positions? → Use conviction (|score|)
-       └─► Final winner's position adopted by ALL models
+  ├─> Challenge: Representative argues for Left
+  ├─> Response: Minority responds
+  └─> Winner determination:
+       ├─> Did minority converge to Left? > Representative wins
+       ├─> Did representative converge to Right? > Minority wins
+       ├─> Both maintain positions? > Use conviction (|score|)
+       └─> Final winner's position adopted by ALL models
 ```
 
 **Winner Determination Logic**:
@@ -181,9 +181,9 @@ Stage 2:
 
 ---
 
-## 📊 Data Flow
+## Data Flow
 
-### Input → Processing → Output
+### Input > Processing > Output
 
 ```
 Input: Article JSON
@@ -193,24 +193,24 @@ Input: Article JSON
   "bias": -1.5  // Optional ground truth
 }
          │
-         ▼
+         v
    ┌──────────────┐
-   │   Qwen3      │ → {"lean": -2.0, "reason": "...", "direction": "Left"}
-   │   GPT-OSS    │ → {"lean": 1.5, "reason": "...", "direction": "Right"}
-   │   Mistral    │ → {"lean": 0.0, "reason": "...", "direction": "Center"}
+   │   Qwen3      │ > {"lean": -2.0, "reason": "...", "direction": "Left"}
+   │   GPT-OSS    │ > {"lean": 1.5, "reason": "...", "direction": "Right"}
+   │   Mistral    │ > {"lean": 0.0, "reason": "...", "direction": "Center"}
    └──────┬───────┘
           │
-          ▼
+          v
    ┌──────────────┐
-   │  Consensus   │ → All differ → Discussion needed
+   │  Consensus   │ > All differ > Discussion needed
    └──────┬───────┘
           │
-          ▼
+          v
    ┌──────────────┐
-   │  Discussion  │ → Stage 1 + Stage 2
+   │  Discussion  │ > Stage 1 + Stage 2
    └──────┬───────┘
           │
-          ▼
+          v
 Output: Final Result
 {
   "article_id": 5,
@@ -224,7 +224,7 @@ Output: Final Result
 
 ---
 
-## 🧩 Component Architecture
+## Component Architecture
 
 ### Core Components
 
@@ -274,7 +274,7 @@ src/
 
 ---
 
-## 🎯 Design Principles
+## Design Principles
 
 ### 1. Memory Efficiency
 - Sequential model loading (not parallel)
@@ -298,12 +298,12 @@ src/
 
 ---
 
-## 📈 Performance Optimizations
+## Performance Optimizations
 
 ### GPU Memory Management
 
 ```python
-# Load → Process → Unload cycle
+# Load > Process > Unload cycle
 def _process_single_model(self, model_name, articles, labeler):
     # Process with model
     results = labeler.label_articles_batch(articles)
@@ -337,7 +337,7 @@ else:
 
 ---
 
-## 🔐 Error Handling
+## Error Handling
 
 ### Three-Level Error Strategy
 
@@ -368,25 +368,25 @@ if not all_models_loaded:
 
 ---
 
-## 📝 Logging & Monitoring
+## Logging & Monitoring
 
 ### Multi-Level Logging
 
 ```
 INFO: High-level progress
-  ├─► "Processing batch 1-3"
-  ├─► "Consensus reached for article 5"
-  └─► "Discussion triggered for article 7"
+  ├─> "Processing batch 1-3"
+  ├─> "Consensus reached for article 5"
+  └─> "Discussion triggered for article 7"
 
 DEBUG: Detailed operations
-  ├─► "Loading Qwen3 model..."
-  ├─► "Extracted JSON: {..."
-  └─► "Agent updated score: -2.0 → -1.5"
+  ├─> "Loading Qwen3 model..."
+  ├─> "Extracted JSON: {..."
+  └─> "Agent updated score: -2.0 > -1.5"
 
 ERROR: Issues and failures
-  ├─► "JSON extraction failed, using fallback"
-  ├─► "Discussion timeout after 30 minutes"
-  └─► "Article skipped due to critical error"
+  ├─> "JSON extraction failed, using fallback"
+  ├─> "Discussion timeout after 30 minutes"
+  └─> "Article skipped due to critical error"
 ```
 
 ### Statistics Tracking
@@ -404,7 +404,7 @@ self.stats = {
 
 ---
 
-## 🚀 Scalability Considerations
+## Scalability Considerations
 
 ### Horizontal Scaling
 
@@ -429,7 +429,7 @@ else:
 
 ---
 
-## 📚 References
+## References
 
 - **Ensemble Learning**: Zhou, Z. H. (2012). "Ensemble methods: foundations and algorithms."
 - **Multi-Agent Debate**: Du, Y. et al. (2023). "Improving Factuality and Reasoning in Language Models through Multiagent Debate."

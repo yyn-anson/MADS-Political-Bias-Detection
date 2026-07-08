@@ -42,7 +42,7 @@ from src.utils.json_extractor import RobustJSONExtractor
 
 logger = logging.getLogger(__name__)
 
-# ── Prompts ───────────────────────────────────────────────────────────────────
+# -- Prompts -------------------------------------------------------------------
 # TODO: Customise the system prompt and user template if needed.
 # The defaults below match the other ensemble labelers and work well for most
 # instruction-tuned models.
@@ -103,7 +103,7 @@ Scoring scale: -3 (strong left) to +3 (strong right), 0 = neutral.\
 """
 
 
-# ── Labeler ───────────────────────────────────────────────────────────────────
+# -- Labeler -------------------------------------------------------------------
 
 class CustomLabeler(BaseLabeler):
     """
@@ -124,6 +124,7 @@ class CustomLabeler(BaseLabeler):
         top_p: float = 0.9,
         batch_size: int = 1,
     ):
+        """Configure the vLLM endpoint, served model ID, and generation parameters."""
         super().__init__(model_name=model_id, batch_size=batch_size)
         self._base_url = base_url
         self._api_key = api_key
@@ -132,7 +133,7 @@ class CustomLabeler(BaseLabeler):
         self._top_p = top_p
         self._client: Optional[OpenAI] = None
 
-    # ── BaseLabeler interface ─────────────────────────────────────────────────
+    # -- BaseLabeler interface -------------------------------------------------
 
     def load_model(self) -> None:
         """Connect to the vLLM server and verify it is reachable.
@@ -214,7 +215,7 @@ class CustomLabeler(BaseLabeler):
         """Drop the client connection (vLLM server keeps running)."""
         self._client = None
 
-    # ── Discussion support (optional) ─────────────────────────────────────────
+    # -- Discussion support (optional) -----------------------------------------
     # The default implementations in BaseLabeler raise NotImplementedError.
     # Implement these only if you want your model to participate in debates.
 
@@ -225,6 +226,11 @@ class CustomLabeler(BaseLabeler):
         own_analysis: Dict,
         target_analysis: Dict,
     ) -> Tuple[str, str]:
+        """Generate a structured challenge against target_analysis.
+
+        Returns:
+            Tuple of (user prompt sent, raw model response).
+        """
         if self._client is None:
             self.load_model()
 
@@ -267,6 +273,11 @@ class CustomLabeler(BaseLabeler):
         own_analysis: Dict,
         challenger_analysis: Dict,
     ) -> Tuple[str, Dict]:
+        """Respond to a challenge, possibly revising the bias score.
+
+        Returns:
+            Tuple of (user prompt sent, dict with lean/reason/raw_response).
+        """
         if self._client is None:
             self.load_model()
 
