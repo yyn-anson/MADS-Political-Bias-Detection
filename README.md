@@ -205,7 +205,7 @@ multi_agent_bias_detection/
 python run_batches.py --model small --dataset baly --total 100
 
 # Resume interrupted batch
-python run_batches.py --resume outputs/ensemble_outputs_small/session_20250120_143022
+python run_batches.py --resume ensemble_outputs_small/session_20250120_143022
 
 # Custom batch size
 python run_batches.py --model small --dataset baly --batch-size 10
@@ -218,7 +218,7 @@ python run_batches.py --model small --dataset baly --batch-size 10
 python run_outlet_evaluation.py small
 
 # Use existing ensemble results
-python run_outlet_evaluation.py small --skip-ensemble --ensemble-dir outputs/ensemble_outputs_small/session_20250120_143022
+python run_outlet_evaluation.py small --skip-ensemble --ensemble-dir ensemble_outputs_small/session_20250120_143022
 ```
 
 ### Dataset Preparation
@@ -294,16 +294,16 @@ This structured approach significantly improves accuracy over simple averaging o
 
 ## Performance
 
-Performance on standard benchmarks:
+For reported benchmark performance (Baly, Budak, Ad Fontes), please refer to the original paper.
 
-| Dataset | Individual Best | Ensemble (Consensus) | Ensemble (Discussion) | Improvement |
-|---------|----------------|---------------------|----------------------|-------------|
-| Baly | 68.2% | 71.4% | 74.8% | +6.6% |
-| Budak | 72.5% | 75.1% | 78.3% | +5.8% |
-| Ad Fontes | 65.8% | 69.2% | 72.4% | +6.6% |
+Numbers vary with model versions, prompts, sampling parameters, and hardware. To measure
+performance on your own setup, run the pipeline on a balanced dataset — per-model,
+consensus-only, overall-ensemble, and ablation metrics are produced automatically in
+`aggregated_results.json`:
 
-*Results may vary based on model versions and hardware*
-*Results above is only for demonstration purposes*
+```bash
+python run_batches.py --model small --dataset baly
+```
 
 ---
 

@@ -45,8 +45,8 @@ venv.bak/
 # PyCharm
 .idea/
 
-# Model files (too large for Git)
-models/
+# Model weight cache (too large for Git) — root models/ only, NOT src/models/
+/models/
 *.pt
 *.pth
 *.bin

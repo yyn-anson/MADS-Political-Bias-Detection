@@ -209,7 +209,7 @@ def run_outlet_evaluation(ensemble_dir, dataset_path):
     # Build command
     cmd = [
         sys.executable,
-        "LLM/multi_agent/outlet_evaluation.py",
+        "src/evaluation/outlet_evaluation.py",
         "--ensemble-dir", str(ensemble_dir),
         "--custom-dataset", str(dataset_path)
     ]
@@ -236,8 +236,11 @@ def run_outlet_evaluation(ensemble_dir, dataset_path):
         logger.error(f"Failed to run evaluation: {e}")
         sys.exit(1)
     
-    # Find evaluation output
-    eval_dirs = sorted(ensemble_dir.glob("outlet_evaluation_*"))
+    # Find evaluation output (outlet_evaluation.py writes to ensemble_outputs/
+    # relative to the working directory, not inside the session directory)
+    eval_dirs = sorted(Path("ensemble_outputs").glob("outlet_evaluation_*"))
+    if not eval_dirs:
+        eval_dirs = sorted(ensemble_dir.glob("outlet_evaluation_*"))
     if eval_dirs:
         eval_dir = eval_dirs[-1]
         print(f"\nEvaluation completed!")
@@ -246,10 +249,11 @@ def run_outlet_evaluation(ensemble_dir, dataset_path):
         # Check for key output files
         expected_files = [
             "outlet_evaluation_report.json",
-            "visualizations/violin_plot_raw_scores.pdf",
+            "visualizations/violin_plot_professional.pdf",
+            "visualizations/beeswarm_plot.pdf",
             "visualizations/confusion_matrix.pdf",
             "visualizations/per_class_performance.pdf",
-            "visualizations/outlet_comparison.pdf"
+            "visualizations/outlet_comparison_professional.pdf"
         ]
         
         print("\nGenerated files:")

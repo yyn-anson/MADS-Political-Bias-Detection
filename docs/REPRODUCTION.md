@@ -141,12 +141,12 @@ python tools/create_balanced_dataset.py --dataset custom --samples-per-outlet 10
 python run_batches.py --model small --dataset baly --total 100
 
 # Expected runtime: ~2 hours
-# Expected accuracy: ~72%
+# For reported performance, refer to the original paper
 ```
 
 **Output**:
 ```
-outputs/ensemble_outputs_small/session_TIMESTAMP/
+ensemble_outputs_small/session_TIMESTAMP/
 ├── aggregated_results.json
 ├── batch_*_results.json
 └── individual_models/
@@ -161,7 +161,7 @@ outputs/ensemble_outputs_small/session_TIMESTAMP/
 python run_batches.py --model regular --dataset baly --total 100
 
 # Expected runtime: ~4 hours
-# Expected accuracy: ~75%
+# For reported performance, refer to the original paper
 ```
 
 ### Experiment 3: Ablation Study (Discussion Impact)
@@ -174,14 +174,13 @@ python run_batches.py --model small --dataset baly --total 1000
 python run_batches.py --model regular --dataset baly --total 1000
 
 # Compare results
-cat outputs/ensemble_outputs_small/session_*/aggregated_results.json | \
+cat ensemble_outputs_small/session_*/aggregated_results.json | \
   jq '.ablation_study'
 ```
 
-**Expected Results**:
-- Consensus-only accuracy: ~71%
-- With discussion accuracy: ~75%
-- Improvement: +4-6%
+**Expected Results**: the `ablation_study` block reports consensus-only vs.
+with-discussion accuracy and F1 for your run. For reported numbers, refer to
+the original paper.
 
 ### Experiment 4: Cross-Dataset Evaluation
 
@@ -208,14 +207,16 @@ python run_batches.py --model small --dataset ad_fontes --total 500
 # Complete workflow: ensemble + evaluation + visualization
 python run_outlet_evaluation.py small
 
-# Outputs
-outputs/ensemble_outputs_small/session_*/outlet_evaluation_*/
+# Outputs (written next to the session directories)
+ensemble_outputs/outlet_evaluation_TIMESTAMP/
 ├── outlet_evaluation_report.json
-└── visualizations/
-    ├── violin_plot_raw_scores.pdf
+├── detailed_predictions/            # per-outlet prediction files
+└── visualizations/                  # each plot as PDF + SVG
+    ├── violin_plot_professional.pdf
+    ├── beeswarm_plot.pdf
     ├── confusion_matrix.pdf
     ├── per_class_performance.pdf
-    └── outlet_comparison.pdf
+    └── outlet_comparison_professional.pdf
 ```
 
 ---
@@ -226,33 +227,31 @@ outputs/ensemble_outputs_small/session_*/outlet_evaluation_*/
 
 ```bash
 # Find latest session
-SESSION=$(ls -t outputs/ensemble_outputs_small/ | head -1)
+SESSION=$(ls -t ensemble_outputs_small/ | head -1)
 
 # View overall metrics
-cat outputs/ensemble_outputs_small/$SESSION/aggregated_results.json | \
+cat ensemble_outputs_small/$SESSION/aggregated_results.json | \
   jq '.overall_ensemble_metrics'
 
 # Output:
 # {
-#   "accuracy": 0.75,
-#   "macro_f1": 0.7234,
-#   "weighted_f1": 0.7456
+#   "accuracy": 0.XXXX,
+#   "macro_f1": 0.XXXX,
+#   "weighted_f1": 0.XXXX
 # }
 ```
 
 ### Compare Individual Models
 
 ```bash
-# Qwen performance
-cat outputs/ensemble_outputs_small/$SESSION/individual_models/qwen_results.json | \
+# Small ensemble writes llama32/qwen3/mistral (regular: qwen/gptoss/mistral)
+cat ensemble_outputs_small/$SESSION/individual_models/llama32_results.json | \
   jq '.accuracy'
 
-# GPT-OSS performance
-cat outputs/ensemble_outputs_small/$SESSION/individual_models/gptoss_results.json | \
+cat ensemble_outputs_small/$SESSION/individual_models/qwen3_results.json | \
   jq '.accuracy'
 
-# Mistral performance
-cat outputs/ensemble_outputs_small/$SESSION/individual_models/mistral_results.json | \
+cat ensemble_outputs_small/$SESSION/individual_models/mistral_results.json | \
   jq '.accuracy'
 ```
 
@@ -260,13 +259,13 @@ cat outputs/ensemble_outputs_small/$SESSION/individual_models/mistral_results.js
 
 ```bash
 # Count articles that triggered discussion
-ls outputs/ensemble_outputs_small/$SESSION/collaborative_discussions/ | wc -l
+ls ensemble_outputs_small/$SESSION/collaborative_discussions/ | wc -l
 
 # View a discussion transcript
-cat outputs/ensemble_outputs_small/$SESSION/collaborative_discussions/article_0005/discussion_summary.json | jq '.'
+cat ensemble_outputs_small/$SESSION/collaborative_discussions/article_0005/discussion_summary.json | jq '.'
 
 # Statistics
-cat outputs/ensemble_outputs_small/$SESSION/aggregated_results.json | \
+cat ensemble_outputs_small/$SESSION/aggregated_results.json | \
   jq '.discussion_breakdown'
 ```
 
@@ -290,7 +289,7 @@ python run_batches.py --model small --dataset baly --batch-size 12
 python run_batches.py --model small --dataset baly --total 1000
 
 # Resume if interrupted
-python run_batches.py --resume outputs/ensemble_outputs_small/session_TIMESTAMP
+python run_batches.py --resume ensemble_outputs_small/session_TIMESTAMP
 ```
 
 ### Ensemble Comparison
@@ -301,8 +300,8 @@ python run_batches.py --model small --dataset baly --total 500
 python run_batches.py --model regular --dataset baly --total 500
 
 # Compare accuracy
-SMALL=$(cat outputs/ensemble_outputs_small/session_*/aggregated_results.json | jq '.overall_ensemble_metrics.accuracy')
-REGULAR=$(cat outputs/ensemble_outputs/session_*/aggregated_results.json | jq '.overall_ensemble_metrics.accuracy')
+SMALL=$(cat ensemble_outputs_small/session_*/aggregated_results.json | jq '.overall_ensemble_metrics.accuracy')
+REGULAR=$(cat ensemble_outputs/session_*/aggregated_results.json | jq '.overall_ensemble_metrics.accuracy')
 
 echo "Small ensemble: $SMALL"
 echo "Regular ensemble: $REGULAR"
@@ -317,7 +316,7 @@ echo "Regular ensemble: $REGULAR"
 ```bash
 python run_outlet_evaluation.py regular
 
-# Output: outputs/ensemble_outputs/session_*/outlet_evaluation_*/visualizations/outlet_comparison.pdf
+# Output: ensemble_outputs/session_*/outlet_evaluation_*/visualizations/outlet_comparison.pdf
 ```
 
 ### Confusion Matrix
@@ -335,8 +334,8 @@ import pandas as pd
 
 # Load results
 results_files = [
-    'outputs/ensemble_outputs_small/session_*/aggregated_results.json',
-    'outputs/ensemble_outputs/session_*/aggregated_results.json'
+    'ensemble_outputs_small/session_*/aggregated_results.json',
+    'ensemble_outputs/session_*/aggregated_results.json'
 ]
 
 # Create comparison table

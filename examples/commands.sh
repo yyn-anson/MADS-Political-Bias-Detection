@@ -40,7 +40,7 @@ python run_batches.py --model small --dataset baly --batch-size 12
 # =============================================================================
 
 # Resume from specific session
-python run_batches.py --resume outputs/ensemble_outputs_small/session_20250120_143022
+python run_batches.py --resume ensemble_outputs_small/session_20250120_143022
 
 # =============================================================================
 # OUTLET-LEVEL EVALUATION
@@ -56,7 +56,7 @@ python run_outlet_evaluation.py regular
 python run_outlet_evaluation.py small --dataset-path data/balanced_datasets/custom_100_per_outlet
 
 # Skip ensemble, only run evaluation (use existing results)
-python run_outlet_evaluation.py small --skip-ensemble --ensemble-dir outputs/ensemble_outputs_small/session_20250120_143022
+python run_outlet_evaluation.py small --skip-ensemble --ensemble-dir ensemble_outputs_small/session_20250120_143022
 
 # =============================================================================
 # DATASET PREPARATION
@@ -108,26 +108,26 @@ python run_outlet_evaluation.py regular --dataset-path data/balanced_datasets/cu
 # =============================================================================
 
 # Find latest session
-ls -lt outputs/ensemble_outputs_small/ | head -n 2
+ls -lt ensemble_outputs_small/ | head -n 2
 
 # View aggregated metrics
-cat outputs/ensemble_outputs_small/session_*/aggregated_results.json | jq .overall_ensemble_metrics
+cat ensemble_outputs_small/session_*/aggregated_results.json | jq .overall_ensemble_metrics
 
 # View individual model performance
-cat outputs/ensemble_outputs_small/session_*/individual_models/qwen_results.json | jq .accuracy
+cat ensemble_outputs_small/session_*/individual_models/qwen_results.json | jq .accuracy
 
 # Count discussion articles
-ls outputs/ensemble_outputs_small/session_*/collaborative_discussions/ | wc -l
+ls ensemble_outputs_small/session_*/collaborative_discussions/ | wc -l
 
 # =============================================================================
 # CLEANUP
 # =============================================================================
 
 # Remove specific session
-rm -rf outputs/ensemble_outputs_small/session_20250120_143022/
+rm -rf ensemble_outputs_small/session_20250120_143022/
 
 # Keep only latest 3 sessions
-cd outputs/ensemble_outputs_small/
+cd ensemble_outputs_small/
 ls -t | tail -n +4 | xargs rm -rf
 cd ../..
 

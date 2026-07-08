@@ -79,44 +79,6 @@ def load_dataset_with_ground_truth(dataset_type: str) -> List[Tuple[Dict, str]]:
         raise FileNotFoundError(f"Dataset for '{dataset_type}' not found at {balanced_dir}")
 
 
-def get_ground_truth_label(article_data: dict, dataset_type: str) -> str:
-    """
-    Extract ground truth label from article data.
-    
-    Returns:
-        'left', 'center', or 'right'
-    """
-    if dataset_type == 'baly':
-        bias_score = article_data.get('bias', 0)
-        if bias_score <= -1:
-            return 'left'
-        elif bias_score >= 1:
-            return 'right'
-        else:
-            return 'center'
-    elif dataset_type == 'budak':
-        # Budak uses 'bias_text' field
-        bias_text = article_data.get('bias_text', '').lower()
-        if bias_text in ['left', 'center', 'right']:
-            return bias_text
-        # Handle variations like 'lean left' -> 'left'
-        if 'left' in bias_text:
-            return 'left'
-        elif 'right' in bias_text:
-            return 'right'
-        return 'center'
-    elif dataset_type == 'ad_fontes':
-        # Ad Fontes uses numerical bias
-        bias = article_data.get('Bias', 0)
-        if bias < -5:
-            return 'left'
-        elif bias > 5:
-            return 'right'
-        else:
-            return 'center'
-    return 'center'
-
-
 def aggregate_batch_results(output_dir: Path, dataset_type: str = 'baly') -> Dict:
     """
     Aggregate results from all batch files and calculate comprehensive metrics.
@@ -507,17 +469,17 @@ def aggregate_batch_results(output_dir: Path, dataset_type: str = 'baly') -> Dic
                 # Use saved pre-discussion direction
                 pred_direction = result['pre_discussion_direction']
             elif 'individual_scores' in result:
-                # Calculate average from individual scores
-                scores = []
-                for model in ['qwen', 'gptoss', 'mistral']:
-                    if model in result['individual_scores'] and 'score' in result['individual_scores'][model]:
-                        scores.append(result['individual_scores'][model]['score'])
-                
+                # Calculate average from individual scores (works for both ensembles)
+                scores = [
+                    model_data['score']
+                    for model_data in result['individual_scores'].values()
+                    if 'score' in model_data
+                ]
                 if len(scores) == 3:
                     avg_score = sum(scores) / 3
                     pred_direction = 'Left' if avg_score <= -1 else 'Right' if avg_score >= 1 else 'Center'
                 else:
-                    print(f"WARNING: Missing individual scores for {filename}")
+                    print(f"WARNING: Expected 3 individual scores for {filename}, got {len(scores)} - skipping")
                     continue
             else:
                 print(f"WARNING: No pre-discussion data for {filename}")

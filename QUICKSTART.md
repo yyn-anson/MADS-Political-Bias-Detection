@@ -118,20 +118,93 @@ python run_batches.py --model small --dataset baly --total 10
 python run_batches.py --model regular --dataset baly --total 10
 ```
 
-Expected console output:
+Expected console output (metric values depend on your models — refer to the
+original paper for reported performance):
+
 ```
 Running small ensemble model on baly dataset
 Total articles to process: 10
+Articles per run: 8
+Output directory: ensemble_outputs_small\session_20260101_120000
+============================================================
 
 Batch 1: Processing articles 0-8
+----------------------------------------
 [OK] Batch 0-8 completed successfully
 
+Batch 2: Processing articles 8-10
+----------------------------------------
+[OK] Batch 8-10 completed successfully
+
+============================================================
 AGGREGATING BATCH RESULTS
-Accuracy: 0.7500 (75.00%)
-Macro F1:  0.7234
+============================================================
+...
+4. OVERALL ENSEMBLE PERFORMANCE
+============================================================
+Total articles processed: 10
+
+Accuracy: 0.XXXX (XX.XX%)
+Macro F1: 0.XXXX
+...
+7. ABLATION STUDY: Impact of Collaborative Discussion
+============================================================
+...
+Aggregated results saved to: ensemble_outputs_small\session_20260101_120000\aggregated_results.json
 ```
 
-Results are written to `outputs/ensemble_outputs_small/session_TIMESTAMP/`.
+During each batch the ensemble phases appear in the logs:
+`PHASE 1: Individual Model Analysis` → `PHASE 2: Collaborative Discussion for
+Disagreements` → (when all three models disagree) `Article N: Triggering
+collaborative discussion` with round-by-round score adjustments.
+
+---
+
+## Step 5: Read the results
+
+Everything is written to `ensemble_outputs_small/session_TIMESTAMP/`
+(or `ensemble_outputs/` for the regular ensemble), relative to the project root:
+
+```
+ensemble_outputs_small/session_TIMESTAMP/
+├── aggregated_results.json          # All metrics: per-model, consensus-only,
+│                                    #   overall ensemble, ablation study
+├── batch_0_8_results.json           # Raw per-batch results + statistics
+├── article_list.json                # Which articles were processed
+├── article_0000/                    # Per-article decisions
+│   ├── llama32_response.json        #   each model's score + reasoning
+│   ├── qwen3_response.json
+│   ├── mistral_response.json
+│   └── final_decision.json          #   consensus outcome (example below)
+├── individual_models/               # Per-model accuracy vs ground truth
+└── collaborative_discussions/       # Full debate transcripts
+    └── article_0003/
+        ├── discussion_summary.json  #   initial → final positions per agent
+        └── round_*_..._prompt/_response.txt   # every prompt & raw reply
+```
+
+Example `final_decision.json` — all three models agreed, so the final score is
+their average and no discussion was needed:
+
+```json
+{
+  "article_id": 0,
+  "filename": "2996_fmioocJFHjjkfHXU.json",
+  "models_used": ["llama32", "qwen3", "mistral"],
+  "individual_scores": {
+    "llama32": { "score": -2, "direction": "Left" },
+    "qwen3":   { "score": -2, "direction": "Left" },
+    "mistral": { "score": -3, "direction": "Left" }
+  },
+  "consensus_type": "unanimous",
+  "final_score": -2.33,
+  "final_direction": "Left"
+}
+```
+
+When the three models split three ways (`"consensus_type": "all_different"`),
+the result additionally records the debate outcome: `stage1_winner`,
+`stage2_winner`, `final_agent_states`, and `convergence_type`.
 
 ---
 
@@ -141,16 +214,37 @@ Results are written to `outputs/ensemble_outputs_small/session_TIMESTAMP/`.
 # Process 1000 articles
 python run_batches.py --model small --dataset baly --total 1000
 
-# Resume an interrupted batch
-python run_batches.py --resume outputs/ensemble_outputs_small/session_20260101_120000
+# Resume an interrupted batch (auto-detects dataset, model type, batch size,
+# and continues from the first unprocessed article)
+python run_batches.py --resume ensemble_outputs_small/session_20260101_120000
 
-# Outlet-level evaluation
+# Outlet-level evaluation (per-outlet report + violin/beeswarm plots)
 python run_outlet_evaluation.py small
 
 # Different datasets
 python run_batches.py --model small --dataset budak --total 100
 python run_batches.py --model small --dataset ad_fontes --total 100
 ```
+
+---
+
+## Swapping a model (no code changes)
+
+Any of the three slots can serve a different model — set the slot's env vars
+and run as usual:
+
+```bash
+# Example: replace Mistral-7B with Phi-4
+vllm serve microsoft/phi-4 --port 8003 --api-key token-abc123
+
+export VLLM_MISTRAL_MODEL="microsoft/phi-4"     # PowerShell: $env:VLLM_MISTRAL_MODEL="microsoft/phi-4"
+python run_batches.py --model small --dataset baly --total 10
+```
+
+Slot variables: `VLLM_LLAMA_URL/_MODEL`, `VLLM_QWEN_URL/_MODEL`
+(+ `VLLM_QWEN_THINKING=0` to disable thinking mode), `VLLM_MISTRAL_URL/_MODEL`;
+regular ensemble: `VLLM_QWEN14B_*`, `VLLM_GPTOSS_*`, `VLLM_MISTRAL22B_*`.
+See [docs/ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md) for custom labelers.
 
 ---
 

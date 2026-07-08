@@ -152,19 +152,20 @@ export VLLM_API_KEY="your-secret-key"
 
 ---
 
-## Model performance (Baly dataset)
+## Model performance
 
-| Model | Individual accuracy | Notes |
-|-------|-------------------|-------|
-| Qwen3-14B | ~68 % | Strongest with thinking mode |
-| GPT-OSS-20B | ~66 % | High nuance |
-| Mistral-Small-22B | ~71 % | Best instruction following |
-| Llama-3.2-3B | ~65 % | Fastest inference |
-| Qwen3-4B | ~66 % | Good balance of speed/accuracy |
-| **Regular ensemble** | **~75 %** | After discussion |
-| **Small ensemble** | **~72 %** | After discussion |
+For reported per-model and ensemble performance on the 3-class task
+(Left / Center / Right), refer to the original paper.
 
-*Accuracy measured on the 3-class task (Left / Center / Right).*
+Qualitative notes from development runs:
+
+| Model | Notes |
+|-------|-------|
+| Qwen3-14B | Strongest with thinking mode |
+| GPT-OSS-20B | High nuance |
+| Mistral-Small-22B | Best instruction following |
+| Llama-3.2-3B | Fastest inference |
+| Qwen3-4B | Good balance of speed/accuracy |
 
 ---
 

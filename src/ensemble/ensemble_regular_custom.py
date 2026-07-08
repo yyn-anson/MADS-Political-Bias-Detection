@@ -2098,36 +2098,6 @@ def find_balanced_dataset(config: Dict, dataset_type: str) -> Optional[Path]:
     return None
 
 
-def load_ad_fontes_articles(config, n_samples: int = 5000):
-    """Load n random articles from the Ad Fontes dataset"""
-    import random
-    ad_fontes_dir = config['dirs']['ad_fontes']
-    
-    json_files = [f for f in os.listdir(ad_fontes_dir) if f.endswith('.json')]
-    
-    if not json_files:
-        raise FileNotFoundError(f"No JSON files found in {ad_fontes_dir}")
-    
-    articles = []
-    random.shuffle(json_files)
-    
-    for json_file in json_files:
-        if len(articles) >= n_samples:
-            break
-            
-        file_path = os.path.join(ad_fontes_dir, json_file)
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                article_data = json.load(f)
-                articles.append((article_data, json_file))
-        except Exception as e:
-            logger.warning(f"Failed to load {json_file}: {e}")
-            continue
-    
-    logger.info(f"Loaded {len(articles)} articles from Ad Fontes dataset")
-    return articles[:n_samples]
-
-
 # ==============================================================================
 # MAIN EXECUTION
 # ==============================================================================
@@ -2160,27 +2130,13 @@ async def main(data_dir: str = None, dataset: str = None, n_samples: int = 1000,
             raise ValueError(f"Directory {data_path} is not a valid balanced dataset (missing manifest)")
     
     elif use_original:
-        # User explicitly wants original data
-        if not dataset:
-            dataset = 'baly'  # Default to baly if not specified
-        
-        logger.info(f"Using original (unbalanced) {dataset.upper()} dataset")
-        
-        if dataset.lower() == 'baly':
-            from src.models.qwen3_labeler import load_random_articles
-            articles = load_random_articles(config, n_samples=n_samples)
-            logger.info(f"Loaded {len(articles)} articles from BALY dataset")
-        elif dataset.lower() == 'budak':
-            from src.models.qwen3_labeler import load_budak_articles
-            articles = load_budak_articles(config, n_samples=n_samples)
-            logger.info(f"Loaded {len(articles)} articles from BUDAK dataset")
-        elif dataset.lower() == 'ad_fontes':
-            articles = load_ad_fontes_articles(config, n_samples=n_samples)
-            logger.info(f"Loaded {len(articles)} articles from AD_FONTES dataset")
-        else:
-            raise ValueError(f"Unknown dataset: {dataset}. Use 'baly', 'budak', or 'ad_fontes'")
-        
-        dataset_type = dataset.lower()
+        # Original (unbalanced) datasets are not shipped with this repo.
+        raise NotImplementedError(
+            "--use-original is not supported in this repository. The original "
+            "unbalanced Baly/Budak/Ad Fontes corpora belong to the legacy "
+            "MediaBiasDetection project. Create a balanced dataset with "
+            "tools/create_balanced_dataset.py and run without --use-original."
+        )
     
     else:
         # Default: Must specify dataset type and load its balanced version

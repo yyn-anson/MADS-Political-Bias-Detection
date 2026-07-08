@@ -1,5 +1,5 @@
 {
-  "description": "Example output structure from ensemble evaluation",
+  "description": "Example output structure from ensemble evaluation. All metric values are illustrative placeholders showing the schema only - for reported performance, refer to the original paper.",
   "aggregated_results": {
     "timestamp": "2025-01-20T14:30:22",
     "dataset_type": "baly",
@@ -19,9 +19,21 @@
         "accuracy": 0.68,
         "macro_f1": 0.6645,
         "per_class": {
-          "Left": {"precision": 0.72, "recall": 0.65, "f1-score": 0.68},
-          "Center": {"precision": 0.61, "recall": 0.70, "f1-score": 0.65},
-          "Right": {"precision": 0.70, "recall": 0.69, "f1-score": 0.69}
+          "Left": {
+            "precision": 0.72,
+            "recall": 0.65,
+            "f1-score": 0.68
+          },
+          "Center": {
+            "precision": 0.61,
+            "recall": 0.7,
+            "f1-score": 0.65
+          },
+          "Right": {
+            "precision": 0.7,
+            "recall": 0.69,
+            "f1-score": 0.69
+          }
         }
       },
       "gptoss": {
@@ -40,9 +52,24 @@
       "macro_f1": 0.7234,
       "weighted_f1": 0.7456,
       "per_class": {
-        "Left": {"precision": 0.78, "recall": 0.72, "f1-score": 0.75, "support": 33},
-        "Center": {"precision": 0.69, "recall": 0.74, "f1-score": 0.71, "support": 34},
-        "Right": {"precision": 0.76, "recall": 0.79, "f1-score": 0.77, "support": 33}
+        "Left": {
+          "precision": 0.78,
+          "recall": 0.72,
+          "f1-score": 0.75,
+          "support": 33
+        },
+        "Center": {
+          "precision": 0.69,
+          "recall": 0.74,
+          "f1-score": 0.71,
+          "support": 34
+        },
+        "Right": {
+          "precision": 0.76,
+          "recall": 0.79,
+          "f1-score": 0.77,
+          "support": 33
+        }
       }
     },
     "ablation_study": {
@@ -69,7 +96,11 @@
     "description": "Example of a single article result",
     "article_id": 5,
     "filename": "article_006.json",
-    "models_used": ["qwen", "gptoss", "mistral"],
+    "models_used": [
+      "qwen",
+      "gptoss",
+      "mistral"
+    ],
     "individual_scores": {
       "qwen": {
         "score": -2.0,

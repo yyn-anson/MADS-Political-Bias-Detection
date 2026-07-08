@@ -42,35 +42,39 @@ def get_config() -> Dict[str, Any]:
         'vllm': {
             'api_key': os.environ.get('VLLM_API_KEY', 'token-abc123'),
 
+            # Any of the three slots can be swapped for a different model:
+            # point the slot's *_URL at your server and set *_MODEL to the
+            # served model ID. No code changes are needed — every labeler
+            # speaks the same OpenAI-compatible protocol and JSON contract.
             'small_ensemble': {
                 'llama32': {
                     'base_url': os.environ.get('VLLM_LLAMA_URL',   'http://localhost:8001/v1'),
-                    'model_id': 'meta-llama/Llama-3.2-3B-Instruct',
+                    'model_id': os.environ.get('VLLM_LLAMA_MODEL', 'meta-llama/Llama-3.2-3B-Instruct'),
                 },
                 'qwen3': {
                     'base_url':        os.environ.get('VLLM_QWEN_URL',    'http://localhost:8002/v1'),
-                    'model_id':        'Qwen/Qwen3-4B',
-                    'enable_thinking': True,
+                    'model_id':        os.environ.get('VLLM_QWEN_MODEL',  'Qwen/Qwen3-4B'),
+                    'enable_thinking': os.environ.get('VLLM_QWEN_THINKING', '1') not in ('0', 'false', 'False'),
                 },
                 'mistral': {
-                    'base_url': os.environ.get('VLLM_MISTRAL_URL', 'http://localhost:8003/v1'),
-                    'model_id': 'mistralai/Mistral-7B-Instruct-v0.3',
+                    'base_url': os.environ.get('VLLM_MISTRAL_URL',   'http://localhost:8003/v1'),
+                    'model_id': os.environ.get('VLLM_MISTRAL_MODEL', 'mistralai/Mistral-7B-Instruct-v0.3'),
                 },
             },
 
             'regular_ensemble': {
                 'qwen3': {
                     'base_url':        os.environ.get('VLLM_QWEN14B_URL',    'http://localhost:8001/v1'),
-                    'model_id':        'Qwen/Qwen3-14B',
-                    'enable_thinking': True,
+                    'model_id':        os.environ.get('VLLM_QWEN14B_MODEL',  'Qwen/Qwen3-14B'),
+                    'enable_thinking': os.environ.get('VLLM_QWEN14B_THINKING', '1') not in ('0', 'false', 'False'),
                 },
                 'gptoss': {
-                    'base_url': os.environ.get('VLLM_GPTOSS_URL',    'http://localhost:8002/v1'),
-                    'model_id': 'openai/gpt-oss-20b',
+                    'base_url': os.environ.get('VLLM_GPTOSS_URL',   'http://localhost:8002/v1'),
+                    'model_id': os.environ.get('VLLM_GPTOSS_MODEL', 'openai/gpt-oss-20b'),
                 },
                 'mistral': {
-                    'base_url': os.environ.get('VLLM_MISTRAL22B_URL', 'http://localhost:8003/v1'),
-                    'model_id': 'mistralai/Mistral-Small-Instruct-2409',
+                    'base_url': os.environ.get('VLLM_MISTRAL22B_URL',   'http://localhost:8003/v1'),
+                    'model_id': os.environ.get('VLLM_MISTRAL22B_MODEL', 'mistralai/Mistral-Small-Instruct-2409'),
                 },
             },
         },
