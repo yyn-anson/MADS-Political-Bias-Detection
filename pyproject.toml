@@ -18,6 +18,7 @@ dev = ["pytest>=8.0", "ruff>=0.9"]
 
 [project.scripts]
 mads = "mads.cli:main"
+mads-convert-custom = "mads.custom_dataset:main"
 
 [tool.setuptools]
 package-dir = { "" = "src" }

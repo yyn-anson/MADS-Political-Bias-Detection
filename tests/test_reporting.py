@@ -27,6 +27,7 @@ class ReportingTests(unittest.TestCase):
             id="center-1",
             title="Balanced report",
             text="x" * 100,
+            source="Example News",
             label=BiasLabel.CENTER,
         )
         analyses = {name: analysis(name) for name in ("analyst_a", "analyst_b", "analyst_c")}
@@ -48,9 +49,21 @@ class ReportingTests(unittest.TestCase):
         self.assertEqual(metrics["accuracy"], 1.0)
         with tempfile.TemporaryDirectory() as directory:
             run_dir = write_report(directory, [result], [], AppConfig(), input_path="test")
-            for filename in ("report.html", "results.json", "results.jsonl", "summary.csv"):
+            for filename in (
+                "report.html",
+                "results.json",
+                "results.jsonl",
+                "summary.csv",
+                "evaluation.json",
+                "outlet_summary.csv",
+                "score_distributions.svg",
+                "outlet_comparison.svg",
+            ):
                 self.assertTrue((run_dir / filename).is_file(), filename)
-            self.assertIn("MADS analysis report", (run_dir / "report.html").read_text())
+            report = (run_dir / "report.html").read_text()
+            self.assertIn("MADS analysis report", report)
+            self.assertIn("Metrics compare model predictions", report)
+            self.assertNotIn("For this custom dataset", report)
 
 
 if __name__ == "__main__":

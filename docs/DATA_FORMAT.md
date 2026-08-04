@@ -60,3 +60,23 @@ cannot supply labels or metadata.
   context capacity.
 
 Run `python3 run.py --validate-only` to check data without loading a model.
+
+## Converting the project's custom dataset
+
+The historical corpus uses fields such as `record_id`, `content_original`, and
+`source_name`. Convert it to the format above with:
+
+```bash
+python3 tools/convert_custom_dataset.py
+python3 run.py --validate-only --input data/custom_dataset/articles.jsonl
+python3 run.py --input data/custom_dataset/articles.jsonl --limit 100
+```
+
+The committed `data/article_outlet_labels.csv` table assigns each record the AllSides
+2025 rating of its outlet. The converter maps Left/Lean Left to `Left`, keeps Center,
+and maps Lean Right/Right to `Right`. Mixed and unmatched articles are retained
+without `label` and therefore do not affect accuracy or F1.
+
+For this custom evaluation, the outlet label is assumed to be the article's ground
+truth. It should be understood as an outlet-derived proxy, not an independent
+article-level annotation.

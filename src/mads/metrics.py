@@ -7,12 +7,10 @@ from collections.abc import Iterable
 from .types import ArticleResult, BiasLabel
 
 
-def classification_metrics(results: Iterable[ArticleResult]) -> dict:
-    pairs = [
-        (result.article.label, result.final_label)
-        for result in results
-        if result.article.label is not None and result.error is None
-    ]
+def classification_metrics_from_pairs(
+    pairs: Iterable[tuple[BiasLabel, BiasLabel]],
+) -> dict:
+    pairs = list(pairs)
     labels = list(BiasLabel)
     if not pairs:
         return {"labeled_articles": 0}
@@ -61,3 +59,12 @@ def classification_metrics(results: Iterable[ArticleResult]) -> dict:
         "per_class": per_class,
         "confusion_matrix": confusion,
     }
+
+
+def classification_metrics(results: Iterable[ArticleResult]) -> dict:
+    pairs = [
+        (result.article.label, result.final_label)
+        for result in results
+        if result.article.label is not None and result.error is None
+    ]
+    return classification_metrics_from_pairs(pairs)

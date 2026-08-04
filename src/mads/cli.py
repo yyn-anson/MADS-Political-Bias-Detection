@@ -66,11 +66,9 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         input_path = "data/sample_articles" if args.demo else args.input
-        articles = load_articles(input_path)
-        if args.limit is not None:
-            if args.limit < 1:
-                raise ValueError("--limit must be at least 1")
-            articles = articles[: args.limit]
+        if args.limit is not None and args.limit < 1:
+            raise ValueError("--limit must be at least 1")
+        articles = load_articles(input_path, limit=args.limit)
         validate_article_lengths(articles, config.method.max_article_characters)
         print(f"Validated {len(articles)} article(s) from {input_path}.")
         if args.validate_only:

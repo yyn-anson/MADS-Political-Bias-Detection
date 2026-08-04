@@ -6,4 +6,7 @@ __pycache__/
 *.egg-info/
 reports/*
 !reports/.gitkeep
+data/custom_dataset/raw_articles/
+data/custom_dataset/articles.jsonl
+data/custom_dataset/conversion_errors.csv
 .DS_Store

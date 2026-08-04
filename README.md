@@ -30,8 +30,9 @@ python3 run.py --check
 python3 run.py --demo
 ```
 
-Open the `report.html` path printed at the end. The same run directory contains
-`results.json` (complete audit trail), `results.jsonl`, and `summary.csv`.
+Open the `report.html` path printed at the end. The same run directory contains the
+complete JSON/JSONL audit trail, CSV summaries, article and outlet evaluation metrics,
+and paper-style SVG figures.
 
 For your own data, copy JSON, JSONL, CSV, or TXT files into `data/articles/` and run:
 
@@ -53,6 +54,23 @@ Optional fields are `source`, `url`, `published_at`, and `label`. A label must b
 `Left`, `Center`, or `Right`; when labels are present the report also calculates
 accuracy, macro-F1, per-class metrics, and a confusion matrix. See
 [docs/DATA_FORMAT.md](docs/DATA_FORMAT.md) for every supported format.
+
+### Existing custom dataset
+
+The committed lookup table preserves AllSides 2025 outlet labels for all 473,989
+historical article IDs. Once the corresponding article bodies are placed in
+`data/custom_dataset/raw_articles/`, convert and analyze them with:
+
+```bash
+python3 tools/convert_custom_dataset.py
+python3 run.py --input data/custom_dataset/articles.jsonl --limit 100
+```
+
+For this custom evaluation, an article's ground-truth label is assumed to be its
+outlet's AllSides 2025 rating. Left and Lean Left become `Left`; Lean Right and Right
+become `Right`; Center is unchanged. This is an outlet-derived proxy rather than an
+independent article annotation. See
+[data/custom_dataset/README.md](data/custom_dataset/README.md) for details.
 
 ## What is implemented from the paper
 
@@ -109,11 +127,13 @@ the architectural diversity assumed by the paper.
 ```text
 data/articles/          user-owned input files (empty by default)
 data/sample_articles/   five source-linked, paraphrased test fixtures
+data/custom_dataset/    custom-corpus conversion instructions and generated data
 src/mads/               one reusable implementation of the complete method
 tests/                  deterministic unit and integration tests
 reports/                generated reports (ignored by Git)
 mads.toml               model and method configuration
 run.py                  zero-install entry point
+tools/                  custom dataset conversion entry point
 ```
 
 ## Testing

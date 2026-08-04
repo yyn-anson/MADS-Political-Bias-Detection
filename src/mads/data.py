@@ -51,10 +51,12 @@ def article_from_mapping(data: Mapping[str, Any], origin: str = "input") -> Arti
     )
 
 
-def _load_json(path: Path) -> list[Article]:
+def _load_json(path: Path, limit: int | None = None) -> list[Article]:
     with path.open(encoding="utf-8") as handle:
         data = json.load(handle)
     records = data if isinstance(data, list) else [data]
+    if limit is not None:
+        records = records[:limit]
     if not all(isinstance(record, dict) for record in records):
         raise ValueError(f"{path}: JSON must be an article object or an array of objects")
     return [
@@ -62,7 +64,7 @@ def _load_json(path: Path) -> list[Article]:
     ]
 
 
-def _load_jsonl(path: Path) -> list[Article]:
+def _load_jsonl(path: Path, limit: int | None = None) -> list[Article]:
     articles = []
     with path.open(encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, 1):
@@ -72,24 +74,30 @@ def _load_jsonl(path: Path) -> list[Article]:
             if not isinstance(record, dict):
                 raise TypeError(f"{path}:{line_number}: each line must be a JSON object")
             articles.append(article_from_mapping(record, f"{path}:{line_number}"))
+            if limit is not None and len(articles) >= limit:
+                break
     return articles
 
 
-def _load_csv(path: Path) -> list[Article]:
+def _load_csv(path: Path, limit: int | None = None) -> list[Article]:
     with path.open(encoding="utf-8-sig", newline="") as handle:
-        return [
-            article_from_mapping(row, f"{path}:{index}")
-            for index, row in enumerate(csv.DictReader(handle), 2)
-        ]
+        articles = []
+        for index, row in enumerate(csv.DictReader(handle), 2):
+            articles.append(article_from_mapping(row, f"{path}:{index}"))
+            if limit is not None and len(articles) >= limit:
+                break
+        return articles
 
 
-def _load_text(path: Path) -> list[Article]:
+def _load_text(path: Path, limit: int | None = None) -> list[Article]:
     text = path.read_text(encoding="utf-8").strip()
     return [Article(id=path.stem, title=path.stem.replace("_", " ").title(), text=text)]
 
 
-def load_articles(path: str | Path) -> list[Article]:
+def load_articles(path: str | Path, *, limit: int | None = None) -> list[Article]:
     """Load every supported article file in a deterministic order."""
+    if limit is not None and limit < 1:
+        raise ValueError("limit must be at least 1")
     input_path = Path(path)
     if not input_path.exists():
         raise FileNotFoundError(f"input path does not exist: {input_path}")
@@ -110,7 +118,10 @@ def load_articles(path: str | Path) -> list[Article]:
     }
     articles: list[Article] = []
     for file_path in files:
-        articles.extend(loaders[file_path.suffix.lower()](file_path))
+        remaining = None if limit is None else limit - len(articles)
+        if remaining == 0:
+            break
+        articles.extend(loaders[file_path.suffix.lower()](file_path, remaining))
     if not articles:
         raise ValueError(
             f"no articles found in {input_path}; supported formats: "

@@ -13,6 +13,17 @@ TEXT = (
 
 
 class DataTests(unittest.TestCase):
+    def test_jsonl_limit_stops_after_requested_articles(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "articles.jsonl"
+            records = [
+                {"id": f"item-{index}", "text": f"Article {index} " + "x" * 100}
+                for index in range(5)
+            ]
+            path.write_text("\n".join(json.dumps(record) for record in records), encoding="utf-8")
+            articles = load_articles(path, limit=2)
+            self.assertEqual([article.id for article in articles], ["item-0", "item-1"])
+
     def test_json_and_csv_are_loaded_in_filename_order(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
