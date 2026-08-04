@@ -1,107 +1,12 @@
-# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+.venv/
+.pytest_cache/
+.ruff_cache/
 *.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Virtual Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+reports/*
+!reports/.gitkeep
+data/custom_dataset/raw_articles/
+data/custom_dataset/articles.jsonl
+data/custom_dataset/conversion_errors.csv
 .DS_Store
-
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb
-
-# PyCharm
-.idea/
-
-# Model weight cache (too large for Git) — root models/ only, NOT src/models/
-/models/
-*.pt
-*.pth
-*.bin
-*.safetensors
-*.h5
-*.pkl
-*.joblib
-
-# Data files (too large for Git)
-data/balanced_datasets/**/article_*.json
-data/balanced_datasets/**/dataset_manifest.json
-data/raw/
-data/articles/
-data/labeled_articles/
-*.parquet
-*.tsv
-*.jsonl
-
-# Block JSON/CSV by default; selectively re-allow small committed files below
-*.csv
-*.json
-
-# Allow committed index/reference data files
-!data/allsides/AllSides_Rating.csv
-!data/article_outlet_labels.csv
-!data/outlet_bias_reference.xlsx
-
-# Allow balanced evaluation datasets (tracked in repo, ~65 MB total)
-!data/balanced_datasets/
-!data/balanced_datasets/**
-data/balanced_datasets/**/__pycache__/
-
-# Outputs (too large for Git)
-outputs/
-ensemble_outputs/
-ensemble_outputs_small/
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
-
-# System files
-Thumbs.db
-.DS_Store
-
-# Keep directory structure but ignore contents
-!data/balanced_datasets/balanced_baly/.gitkeep
-!data/balanced_datasets/balanced_budak/.gitkeep
-!data/balanced_datasets/balanced_ad_fontes/.gitkeep
-!data/balanced_datasets/custom_100_per_outlet/.gitkeep
-!outputs/ensemble_outputs/.gitkeep
-!outputs/ensemble_outputs_small/.gitkeep
-
-# Keep essential config and example files
-!examples/*.json
-!examples/*.sh

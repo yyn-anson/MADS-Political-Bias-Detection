@@ -1,335 +1,169 @@
-# Multi-Agent Political Bias Detection System
+# MADS Political Bias Detection
 
-A production-ready system for detecting political bias in news articles using collaborative multi-agent LLMs with two-stage discussion framework.
+Project repository: **https://github.com/yyn-anson/MADS-Political-Bias-Detection**
 
----
+MADS classifies the political framing of English-language U.S. news articles as
+**Left**, **Center**, or **Right**. Three language-model agents first analyze the
+article independently. The pipeline exits early when all three agree; otherwise it
+runs the conditional 2-vs-1 or 1-vs-1-vs-1 debate described in the paper.
 
-## Overview
+This rewrite is designed for ordinary users rather than private benchmark owners:
+put articles in `data/articles/`, run one command, and open the generated HTML report.
+No training data is required and the base installation has no Python dependencies.
 
-This system employs multiple large language models (LLMs) in a collaborative framework to detect political bias in news articles. When models disagree, they engage in structured two-stage discussions to reach consensus, significantly improving accuracy over individual models or simple averaging.
+> Bias labels are subjective model judgments, not fact-checks. Read the evidence and
+> debate trace before using a result in research or editorial decisions.
 
----
+## Quick start on a Mac
 
-## System Requirements
-
-| Component | Where it runs | Requirement |
-|-----------|--------------|-------------|
-| vLLM servers | **GPU machine** | Python 3.10+, CUDA 11.8+, NVIDIA GPU |
-| Python client | **Your machine** | Python 3.10+, no GPU needed |
-
-**VRAM**: ~28 GB for the small ensemble, ~112 GB for the regular ensemble.
-The GPU machine and your machine can be the same computer or separate hosts.
-
----
-
-## Quick Start
-
-### 1. Start vLLM servers (on the GPU machine)
-
-Install vLLM once on the GPU machine:
-```bash
-pip install vllm
-```
-
-Open **three terminals** and start one model per terminal (small ensemble shown):
+Requirements: Python 3.11 or newer, [Ollama](https://ollama.com), and a local model.
+The tested Mac configuration uses `qwen2.5vl:3b` for all three agents.
 
 ```bash
-# Terminal 1
-vllm serve meta-llama/Llama-3.2-3B-Instruct --port 8001 --api-key token-abc123 --max-model-len 16384
+# One-time model download, if it is not already installed
+ollama pull qwen2.5vl:3b
 
-# Terminal 2
-vllm serve Qwen/Qwen3-4B --port 8002 --api-key token-abc123 --max-model-len 16384
+# Verify the configured local model
+python3 run.py --check
 
-# Terminal 3
-vllm serve mistralai/Mistral-7B-Instruct-v0.3 --port 8003 --api-key token-abc123 --max-model-len 16384
+# Analyze the five bundled real-world, source-linked samples
+python3 run.py --demo
 ```
 
-Wait until each terminal prints `INFO: Application startup complete.`
+Open the `report.html` path printed at the end. The same run directory contains the
+complete JSON/JSONL audit trail, CSV summaries, article and outlet evaluation metrics,
+and paper-style SVG figures.
 
-See **[docs/MODELS.md](docs/MODELS.md)** for regular ensemble commands and multi-GPU flags.
-
-### 2. Install client dependencies
+For your own data, copy JSON, JSONL, CSV, or TXT files into `data/articles/` and run:
 
 ```bash
-git clone https://github.com/yyn-anson/MADS-Political-Bias-Detection.git
-cd MADS-Political-Bias-Detection
-pip install -r requirements.txt
+python3 run.py
 ```
 
-If the GPU machine is on a different host, point the client at it:
-```bash
-export VLLM_LLAMA_URL="http://gpu-server:8001/v1"
-export VLLM_QWEN_URL="http://gpu-server:8002/v1"
-export VLLM_MISTRAL_URL="http://gpu-server:8003/v1"
-export VLLM_API_KEY="token-abc123"
+The minimum JSON format is deliberately small:
+
+```json
+{
+  "id": "article-001",
+  "title": "Article title",
+  "text": "The complete article text goes here."
+}
 ```
 
-### 3. Run Evaluation
+Optional fields are `source`, `url`, `published_at`, and `label`. A label must be
+`Left`, `Center`, or `Right`; when labels are present the report also calculates
+accuracy, macro-F1, per-class metrics, and a confusion matrix. See
+[docs/DATA_FORMAT.md](docs/DATA_FORMAT.md) for every supported format.
 
-```bash
-# Small models (faster, less VRAM)
-python run_batches.py --model small --dataset baly --total 100
+### Existing custom dataset
 
-# Regular models (higher accuracy)
-python run_batches.py --model regular --dataset baly --total 100
-
-# Outlet-level evaluation
-python run_outlet_evaluation.py small
-```
-
-### 4. View Results
-
-Results are saved in `ensemble_outputs/` or `ensemble_outputs_small/` (relative to the project root):
-```
-ensemble_outputs_small/session_TIMESTAMP/
-├── aggregated_results.json        # Overall metrics
-├── batch_0_8_results.json         # Individual batch results
-├── individual_models/              # Per-model performance
-└── collaborative_discussions/      # Discussion transcripts
-```
-
----
-
-## Environment Setup
-
-### Client machine
+The committed lookup table preserves AllSides 2025 outlet labels for all 473,989
+historical article IDs. Once the corresponding article bodies are placed in
+`data/custom_dataset/raw_articles/`, convert and analyze them with:
 
 ```bash
-pip install -r requirements.txt
+python3 tools/convert_custom_dataset.py
+python3 run.py --input data/custom_dataset/articles.jsonl --limit 100
 ```
 
-Key packages installed: `openai` (vLLM HTTP client), `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `seaborn`, `tqdm`, `openpyxl`.
+For this custom evaluation, an article's ground-truth label is assumed to be its
+outlet's AllSides 2025 rating. Left and Lean Left become `Left`; Lean Right and Right
+become `Right`; Center is unchanged. This is an outlet-derived proxy rather than an
+independent article annotation. See
+[data/custom_dataset/README.md](data/custom_dataset/README.md) for details.
 
-### GPU server (vLLM)
+## What is implemented from the paper
+
+1. Three independent content-only analyses produce scores in `[-3, 3]`.
+2. Scores map to Left at `<= -1`, Right at `>= +1`, and Center otherwise.
+3. Unanimous panels exit early and return the mean score.
+4. A 2-vs-1 split selects the lower-entropy majority agent to debate the dissenter.
+5. A three-way split embeds the reasoning and debates the least-similar pair first,
+   followed by the remaining agent.
+6. Each round alternates challenger and target, preserves shared history, permits
+   both agents to revise, and stops on pair consensus, semantic stagnation, or the
+   round cap.
+7. Unresolved debates use the lower prediction entropy as the tiebreaker.
+8. Panel unanimity returns the mean current score; otherwise the winner's score is
+   returned.
+
+Ollama's OpenAI-compatible API supplies token log-probabilities, so the entropy
+tiebreaker uses the model's Left/Center/Right prediction-token distribution instead
+of score magnitude. The exact paper embedder,
+`sentence-transformers/all-MiniLM-L6-v2`, is supported as an optional extra:
 
 ```bash
-pip install vllm
-# Optional: HuggingFace CLI for downloading gated models
-pip install huggingface_hub
-huggingface-cli login   # paste your HF_TOKEN when prompted
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e '.[paper]'
+python run.py --embedding minilm --demo
 ```
 
-See [docs/MODELS.md](docs/MODELS.md) for per-model `vllm serve` commands.
+Without that optional package, `auto` mode reports and uses a deterministic
+384-dimensional hashing fallback. It exercises the same routing and stagnation
+logic fully offline, but production research runs should install MiniLM.
 
----
+See [docs/METHOD.md](docs/METHOD.md) for the algorithm-to-code mapping and explicit
+differences between the paper's diverse-model experiment and the one-model Mac smoke
+test.
 
-## Model Configurations
+## Configuration
 
-### Regular Ensemble (Higher Accuracy)
-| Model | Port | VRAM |
-|-------|------|------|
-| Qwen3-14B (thinking mode) | 8001 | ~28 GB |
-| GPT-OSS-20B | 8002 | ~40 GB |
-| Mistral-Small-22B | 8003 | ~44 GB |
-
-**Batch Size**: 3 articles | **Total VRAM**: ~112 GB
-
-### Small Ensemble (Faster, Efficient)
-| Model | Port | VRAM |
-|-------|------|------|
-| Llama-3.2-3B | 8001 | ~6 GB |
-| Qwen3-4B | 8002 | ~8 GB |
-| Mistral-7B | 8003 | ~14 GB |
-
-**Batch Size**: 8 articles | **Total VRAM**: ~28 GB
-
-### Scoring scale
-
-All models rate each article on a **-3 to +3 integer scale**:
-
-| Score | Meaning |
-|-------|---------|
-| -3 | Strong left |
-| -2 | Moderate left |
-| -1 | Slight left |
-| 0 | Neutral / balanced |
-| +1 | Slight right |
-| +2 | Moderate right |
-| +3 | Strong right |
-
-For **accuracy / F1 metrics** the score is collapsed to 3 classes: score <= -1 -> Left, -1 < score < 1 -> Center, score >= 1 -> Right.
-For **outlet-level violin plots** the raw -3..+3 scores are used directly, showing the full distribution of individual article predictions per outlet.
-
----
-
-## Project Structure
-
-```
-multi_agent_bias_detection/
-├── README.md                    # This file
-├── QUICKSTART.md                # 5-minute quick start guide
-├── requirements.txt             # Python dependencies
-├── config.py                    # System configuration
-├── run_batches.py               # Batch processing runner
-├── run_outlet_evaluation.py     # Complete evaluation workflow
-│
-├── src/                         # Source code
-│   ├── ensemble/                # Ensemble implementations
-│   │   ├── ensemble_regular.py  # Regular (14B/20B/22B) ensemble
-│   │   └── ensemble_small.py    # Small (3B/4B) ensemble
-│   ├── models/                  # Model wrappers
-│   │   ├── base_labeler.py      # Abstract interface (extend this for custom models)
-│   │   ├── custom_labeler_template.py  # Starter template for your own model
-│   │   ├── qwen3_labeler.py
-│   │   ├── llama32_labeler.py
-│   │   ├── gptoss_labeler.py
-│   │   └── mistral_labeler.py
-│   ├── utils/                   # Utility modules
-│   └── evaluation/              # Evaluation tools
-│
-├── tools/                       # Dataset preparation tools
-│   ├── create_balanced_dataset.py
-│   └── label_articles_by_outlet.py  # Label raw articles by AllSides outlet ratings
-│
-├── data/                        # Data directory (user-provided)
-│   └── balanced_datasets/       # Balanced datasets by bias label
-│
-├── models/                      # Model cache (auto-populated)
-├── outputs/                     # Results (auto-created)
-└── docs/                        # Detailed documentation
-    ├── ADDING_A_MODEL.md        # Custom model integration walkthrough
-    ├── ARCHITECTURE.md          # Pipeline and consensus logic
-    ├── MODELS.md                # VRAM requirements table
-    ├── DATASETS.md              # Dataset formats
-    └── REPRODUCTION.md          # Step-by-step reproduction commands
-```
-
----
-
-## Usage Examples
-
-### Basic Batch Processing
+Edit `mads.toml` or override common settings at the command line:
 
 ```bash
-# Process 100 articles with small models
-python run_batches.py --model small --dataset baly --total 100
-
-# Resume interrupted batch
-python run_batches.py --resume ensemble_outputs_small/session_20250120_143022
-
-# Custom batch size
-python run_batches.py --model small --dataset baly --batch-size 10
+python3 run.py --model llama3.2:3b --embedding hashing --max-rounds 2
+python3 run.py --input path/to/articles.jsonl --output path/to/reports
+python3 run.py --validate-only --input data/articles
 ```
 
-### Outlet-Level Evaluation
+The default config intentionally gives the three instances different random seeds
+and low temperatures. That creates independent test runs while reusing one installed
+model. For real evaluation, set three distinct model names in `mads.toml` to recover
+the architectural diversity assumed by the paper.
+
+## Repository structure
+
+```text
+data/articles/          user-owned input files (empty by default)
+data/sample_articles/   five source-linked, paraphrased test fixtures
+data/custom_dataset/    custom-corpus conversion instructions and generated data
+src/mads/               one reusable implementation of the complete method
+tests/                  deterministic unit and integration tests
+reports/                generated reports (ignored by Git)
+mads.toml               model and method configuration
+run.py                  zero-install entry point
+tools/                  custom dataset conversion entry point
+```
+
+## Testing
+
+The deterministic suite needs no model or network:
 
 ```bash
-# Complete workflow: ensemble + evaluation
-python run_outlet_evaluation.py small
-
-# Use existing ensemble results
-python run_outlet_evaluation.py small --skip-ensemble --ensemble-dir ensemble_outputs_small/session_20250120_143022
+python3 -m unittest discover -s tests -v
 ```
 
-### Dataset Preparation
+The real local-model smoke test is:
 
 ```bash
-# Create balanced Baly dataset
-python tools/create_balanced_dataset.py --dataset baly --n-samples 1000
-
-# Create balanced Budak dataset
-python tools/create_balanced_dataset.py --dataset budak --n-samples 500
-
-# Create custom outlet dataset
-python tools/create_balanced_dataset.py --dataset custom --samples-per-outlet 100
+python3 run.py --demo --embedding hashing
 ```
 
----
+Testing details and expected artifacts are in [docs/TESTING.md](docs/TESTING.md).
 
-## Using Your Own Model
+## Privacy and reproducibility
 
-Any model served by vLLM (or any OpenAI-compatible API) can be plugged in without changing the ensemble logic.
+- Article metadata is saved in reports but never sent to the model; only `text` is
+  used for classification, matching the paper's content-only setup.
+- Articles are never truncated silently. Inputs beyond the configured context safety
+  limit fail validation with a clear message.
+- Every report records model names, seeds, temperatures, configuration, confidence
+  source, complete state transitions, termination reasons, and timings.
+- The five samples are concise original paraphrases of linked public-affairs releases,
+  not copies of proprietary news articles. Their labels are human test-fixture
+  judgments, not benchmark ground truth.
 
-1. Start your model's vLLM server:
-   ```bash
-   vllm serve your-org/your-model --port 8004 --api-key token-abc123
-   ```
+## License
 
-2. Copy the labeler template:
-   ```bash
-   cp src/models/custom_labeler_template.py src/models/my_model_labeler.py
-   ```
-
-3. Fill in the `TODO` sections: constructor params, any `extra_body` flags, and thinking-token stripping if needed.
-
-4. Wire it into the ensemble `__init__` and run:
-   ```bash
-   python run_batches.py --model small --dataset baly --total 10
-   ```
-
-See **[docs/ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md)** for a full walkthrough.
-
----
-
-## Documentation
-
-- **[docs/ADDING_A_MODEL.md](docs/ADDING_A_MODEL.md)**: Step-by-step guide to plugging in a custom model
-- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**: Two-stage discussion system architecture
-- **[docs/MODELS.md](docs/MODELS.md)**: Model specifications and parameters
-- **[docs/DATASETS.md](docs/DATASETS.md)**: Dataset formats and sources
-- **[docs/REPRODUCTION.md](docs/REPRODUCTION.md)**: Complete reproduction guide
-- **[data/README.md](data/README.md)**: Data preparation instructions
-
----
-
-## Methodology
-
-### Two-Stage Collaborative Discussion
-
-When all three models disagree on bias direction (Left/Center/Right):
-
-**Stage 1**: All-model debate until majority consensus (2/3 agree)
-- Models challenge each other's analyses
-- Can adjust positions based on arguments
-- Continues until majority or max rounds (8)
-
-**Stage 2**: Winner vs. Minority debate
-- Representative of majority debates minority
-- Final winner determined by convergence or conviction
-- All models adopt winning position
-
-This structured approach significantly improves accuracy over simple averaging or voting.
-
----
-
-## Performance
-
-For reported benchmark performance (Baly, Budak, Ad Fontes), please refer to the original paper.
-
-Numbers vary with model versions, prompts, sampling parameters, and hardware. To measure
-performance on your own setup, run the pipeline on a balanced dataset - per-model,
-consensus-only, overall-ensemble, and ablation metrics are produced automatically in
-`aggregated_results.json`:
-
-```bash
-python run_batches.py --model small --dataset baly
-```
-
----
-
-## Troubleshooting
-
-**`RuntimeError: vLLM server at http://localhost:8001/v1 is not reachable`**
-The vLLM server on that port is not running or not yet ready. Confirm `Application startup complete` appeared in that terminal and that port/URL env vars match.
-
-**Server on a remote host not reachable**
-Set `VLLM_LLAMA_URL` / `VLLM_QWEN_URL` / `VLLM_MISTRAL_URL` to point at the remote IP. Make sure ports 8001-8003 are open in the firewall.
-
-**Out of VRAM on the GPU server**
-Add `--max-model-len 8192` to the `vllm serve` command to shrink KV-cache memory, or add `--tensor-parallel-size 2` to shard across two GPUs.
-
-**Dataset Not Found**
-```bash
-ls data/balanced_datasets/balanced_baly/
-```
-The balanced datasets are included in this repo. If the directory is empty, re-clone or check the gitignore.
-
-For more troubleshooting, see [docs/REPRODUCTION.md](docs/REPRODUCTION.md#troubleshooting)
-
----
-
-## Citation
-
-If you use this system in your research, please cite the original paper.
-
----
+See [LICENSE](LICENSE).
