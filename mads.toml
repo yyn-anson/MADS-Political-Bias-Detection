@@ -1,0 +1,32 @@
+[runtime]
+endpoint = "http://127.0.0.1:11434/v1"
+request_timeout_seconds = 240
+retries = 2
+max_output_tokens = 700
+parallel_initial_analysis = true
+
+[method]
+direction_threshold = 1.0
+max_debate_rounds = 3
+stagnation_similarity = 0.90
+embedding_backend = "auto"
+embedding_model = "sentence-transformers/all-MiniLM-L6-v2"
+max_article_characters = 60000
+
+[[agents]]
+name = "analyst_a"
+model = "qwen2.5vl:3b"
+temperature = 0.15
+seed = 17
+
+[[agents]]
+name = "analyst_b"
+model = "qwen2.5vl:3b"
+temperature = 0.25
+seed = 29
+
+[[agents]]
+name = "analyst_c"
+model = "qwen2.5vl:3b"
+temperature = 0.35
+seed = 43
